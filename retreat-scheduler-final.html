@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Nature of Mind Retreat — Scheduler</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:#f1efe9; color:#292521; -webkit-tap-highlight-color:transparent; }
+  h1,h2,h3 { font-family:'Fraunces',serif; margin:0; }
+  button { font-family:inherit; cursor:pointer; border:none; }
+  input, select, textarea { font-family:inherit; }
+  a { text-decoration:none; color:inherit; }
+
+  .center-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:#fff; border:1px solid #e4e0d8; border-radius:16px; }
+  .btn-primary { background:#1f4a44; color:#fff; border-radius:10px; padding:12px 16px; font-weight:600; font-size:14px; }
+  .btn-primary:hover { background:#183a35; }
+  .btn-ghost { background:transparent; color:#6b6459; font-size:14px; display:flex; align-items:center; gap:6px; }
+  .btn-ghost:hover { color:#292521; }
+  .btn-amber { background:#c08a2e; color:#fff; border-radius:10px; padding:8px 14px; font-weight:600; font-size:13px; }
+  .btn-amber:hover { background:#a3741f; }
+  .input { width:100%; border:1px solid #d8d2c6; border-radius:8px; padding:12px 14px; font-size:16px; outline:none; }
+  .input:focus { border-color:#1f4a44; box-shadow:0 0 0 3px rgba(31,74,68,0.12); }
+  .error-text { color:#b5533c; font-size:13px; margin-top:8px; display:flex; align-items:center; gap:6px; }
+
+  header.topbar { background:#fff; border-bottom:1px solid #e4e0d8; padding:16px 24px; }
+  .topbar-inner { max-width:960px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; }
+  .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#a39c8e; margin:0 0 2px; }
+  .page-title { font-size:18px; font-weight:600; }
+
+  .content { max-width:960px; margin:0 auto; padding:20px 24px 60px; }
+  .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .tab-btn { display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; font-size:14px; font-weight:500; color:#6b6459; background:transparent; }
+  .tab-btn.active { background:#1f4a44; color:#fff; }
+  .tab-btn:not(.active):hover { background:#e9e5da; }
+
+  .pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:2px 10px; font-size:12px; font-weight:600; color:#fff; }
+  .pill-pps { background:#1f4a44; }
+  .pill-cfs { background:#c08a2e; }
+  .pill-fbi { background:#b5533c; }
+
+  .day-card { border:1px solid #e4e0d8; border-radius:14px; background:#fff; overflow:hidden; margin-bottom:14px; }
+  .day-head { background:#faf9f5; border-bottom:1px solid #f0eee7; padding:10px 16px; font-weight:600; font-size:14px; }
+  .day-head .tag { font-weight:400; font-size:12px; color:#a39c8e; margin-left:8px; }
+  .row { display:flex; align-items:center; gap:12px; padding:9px 16px; font-size:14px; border-bottom:1px solid #f5f3ee; }
+  .row:last-child { border-bottom:none; }
+  .row .time { width:110px; flex-shrink:0; color:#a39c8e; }
+  .row.meal .label { color:#8a8478; }
+  .row.exp-pps { background:#e6f0ee; }
+  .row.exp-cfs { background:#f8efdd; }
+  .row.exp-fbi { background:#f7e8e2; }
+
+  .warn-banner { display:flex; gap:8px; align-items:flex-start; border:1px solid #e8cf9e; background:#fbf1de; color:#8a5f14; border-radius:10px; padding:12px 16px; font-size:14px; margin-bottom:16px; }
+
+  .links-list a.link-item { display:flex; align-items:center; justify-content:space-between; border:1px solid #e4e0d8; border-radius:12px; background:#fff; padding:16px; margin-bottom:10px; }
+  .links-list a.link-item:hover { border-color:#9fc4bc; background:#f3f8f6; }
+
+  .week-switch { display:flex; gap:8px; }
+  .week-btn { padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; background:#fff; border:1px solid #e4e0d8; color:#6b6459; }
+  .week-btn.active { background:#1f4a44; color:#fff; border-color:#1f4a44; }
+
+  .day-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px; }
+  .day-chip { flex-shrink:0; padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; background:#fff; border:1px solid #e4e0d8; color:#6b6459; }
+  .day-chip.active { background:#292521; color:#fff; border-color:#292521; }
+
+  .timetable-wrap { border:1px solid #e4e0d8; border-radius:14px; background:#fff; overflow-x:auto; }
+  .timetable { display:grid; grid-template-columns:56px repeat(4,minmax(100px,1fr)); min-width:560px;
+    background-image:
+      repeating-linear-gradient(to bottom, transparent 0, transparent 51px, #d8d2c6 51px, #d8d2c6 52px),
+      repeating-linear-gradient(to bottom, transparent 0, transparent 25px, #f0eee7 25px, #f0eee7 26px);
+    background-position: 0 34px, 0 34px; background-repeat: repeat; }
+  .tt-head { grid-row:1/2; padding:8px 6px; font-size:11px; font-weight:600; text-align:center; color:#6b6459;
+    background:#faf9f5; border-bottom:1px solid #e4e0d8; border-left:1px solid #f0eee7; position:sticky; top:0; z-index:2; }
+  .tt-head.time-head { border-left:none; }
+  .tt-time { font-size:10px; color:#a39c8e; text-align:right; padding-right:6px; line-height:26px; }
+  .tt-lane-line { border-left:1px solid #f0eee7; }
+  .tt-block { border-radius:4px; margin:0 4px; padding:3px 6px; font-size:11px; overflow:hidden; z-index:1; height:100%; }
+  .tt-block.practice { background:#f4f2eb; color:#8a8478; border:1px solid #e9e5da; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; line-height:1.2; box-sizing:border-box; }
+  .tt-block.meal { position:relative; z-index:0; margin:0; background:repeating-linear-gradient(135deg, #faf6ec, #faf6ec 8px, #f5efe0 8px, #f5efe0 16px); border-top:1px solid #ecdfbe; border-bottom:1px solid #ecdfbe; display:flex; align-items:center; justify-content:flex-start; padding-left:6px; box-sizing:border-box; font-style:italic; color:#a3844f; font-weight:600; }
+  .cell { border-radius:4px; margin:0 4px; border:2px dashed #e4e0d8; z-index:1; box-sizing:border-box; height:100%; }
+  .cell.over { border-color:#1f4a44; background:#eef5f3; }
+  .chip { height:100%; width:100%; border-radius:5px; border:1px solid; padding:3px 6px; font-size:11px; font-weight:600; cursor:grab; display:flex; flex-direction:column; justify-content:center; }
+  .chip.pps { background:#e6f0ee; color:#173c37; border-color:#bcdad3; }
+  .chip.cfs { background:#f8efdd; color:#6e4d10; border-color:#e8cf9e; }
+  .chip.fbi { background:#f7e8e2; color:#7a3524; border-color:#eec3b3; }
+  .participant-experiment {
+    height:100%; min-height:0; box-sizing:border-box; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:3px; padding:3px 6px; margin:0 4px;
+    border:1px solid; border-radius:4px; font-weight:600; overflow:hidden;
+  }
+  .participant-experiment.pps { background:#e6f0ee; color:#173c37; border-color:#bcdad3; }
+  .participant-experiment.cfs { background:#f8efdd; color:#6e4d10; border-color:#e8cf9e; }
+  .participant-experiment.fbi { background:#f7e8e2; color:#7a3524; border-color:#eec3b3; }
+  .participant-experiment .exp-title { font-size:12px; line-height:1.1; }
+  .participant-experiment .exp-time { font-size:9px; line-height:1.1; font-weight:400; opacity:0.78; white-space:nowrap; }
+  .chip .note { font-weight:400; font-size:9px; opacity:0.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cell-empty { height:100%; display:flex; align-items:center; justify-content:center; font-size:9px; color:#cfc9bc; cursor:pointer; }
+  .cell-empty:hover { color:#1f4a44; background:#eef5f3; }
+  .tt-legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:#8a8478; }
+  .tt-legend span.dot { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+
+  table.ptable { width:100%; border-collapse:collapse; font-size:13px; }
+  table.ptable th { text-align:left; padding:8px 10px; background:#faf9f5; border-bottom:1px solid #e4e0d8; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:#a39c8e; }
+  table.ptable td { padding:6px 10px; border-bottom:1px solid #f0eee7; }
+  table.ptable input[type=text], table.ptable input[type=date] { border:1px solid #e4e0d8; border-radius:6px; padding:4px 6px; font-size:12px; }
+  table.ptable select { border:1px solid #e4e0d8; border-radius:6px; padding:4px 6px; font-size:12px; font-weight:600; }
+  .status-confirmed { background:#e6f0ee; color:#1f4a44; }
+  .status-tbd { background:#fbf1de; color:#8a5f14; }
+
+  .link-form { display:grid; grid-template-columns:1fr; gap:8px; }
+  @media (min-width:768px) { .link-form { grid-template-columns: 2fr 2fr 1.2fr; } }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.32); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .modal { width:100%; max-width:380px; background:#fff; border-radius:16px; padding:20px; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .modal textarea { width:100%; border:1px solid #d8d2c6; border-radius:8px; padding:8px 10px; font-size:14px; outline:none; resize:vertical; box-sizing:border-box; }
+  .mode-tabs { display:flex; gap:4px; background:#f1efe9; border-radius:10px; padding:3px; margin-bottom:16px; }
+  .mode-tab { flex:1; padding:7px 6px; border-radius:8px; font-size:12.5px; font-weight:600; color:#8a8478; background:transparent; text-align:center; }
+  .mode-tab.active { background:#fff; color:#1f4a44; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  .modal-section { border:1px solid #ece8de; border-radius:12px; padding:12px 14px; margin-bottom:12px; }
+  .modal-section-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#a39c8e; margin:0 0 10px; }
+  .icon-btn { background:none; border:none; color:#a39c8e; cursor:pointer; }
+  .icon-btn:hover { color:#292521; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------------------------------------------------------- */
+/* Reference data                                                    */
+/* ---------------------------------------------------------------- */
+const ADMIN_CODE = "092026";
+
+const WEEK1_DAYS = [
+  { key:"2026-09-04", label:"Fri 4 Sep", short:"Fri4", weekday:"Fri" },
+  { key:"2026-09-05", label:"Sat 5 Sep", short:"Sat5", weekday:"Sat" },
+  { key:"2026-09-06", label:"Sun 6 Sep", short:"Sun6", weekday:"Sun" },
+  { key:"2026-09-07", label:"Mon 7 Sep", short:"Mon7", weekday:"Mon" },
+  { key:"2026-09-08", label:"Tue 8 Sep", short:"Tue8", weekday:"Tue" },
+  { key:"2026-09-09", label:"Wed 9 Sep", short:"Wed9", weekday:"Wed" },
+  { key:"2026-09-10", label:"Thu 10 Sep", short:"Thu10", weekday:"Thu" },
+  { key:"2026-09-11", label:"Fri 11 Sep", short:"Fri11", weekday:"Fri" },
+  { key:"2026-09-12", label:"Sat 12 Sep", short:"Sat12", weekday:"Sat" },
+];
+const WEEK2_DAYS = [
+  { key:"2026-09-12", label:"Sat 12 Sep", short:"Sat12", weekday:"Sat" },
+  { key:"2026-09-13", label:"Sun 13 Sep", short:"Sun13", weekday:"Sun" },
+  { key:"2026-09-14", label:"Mon 14 Sep", short:"Mon14", weekday:"Mon" },
+  { key:"2026-09-15", label:"Tue 15 Sep", short:"Tue15", weekday:"Tue" },
+  { key:"2026-09-16", label:"Wed 16 Sep", short:"Wed16", weekday:"Wed" },
+  { key:"2026-09-17", label:"Thu 17 Sep", short:"Thu17", weekday:"Thu" },
+  { key:"2026-09-18", label:"Fri 18 Sep", short:"Fri18", weekday:"Fri" },
+  { key:"2026-09-19", label:"Sat 19 Sep", short:"Sat19", weekday:"Sat" },
+];
+const INSTALLATION_DAY = "2026-09-04";
+const RETREAT_DAYS = {
+  1: WEEK1_DAYS.filter((d) => d.weekday !== "Sat" && d.key !== INSTALLATION_DAY).map((d) => d.key),
+  2: WEEK2_DAYS.filter((d) => d.weekday !== "Sat").map((d) => d.key),
+};
+const SUNDAYS = new Set(["2026-09-06","2026-09-13"]);
+const NO_FBI_DAY = "2026-09-09";
+
+const PRACTICE_SCHEDULE = [
+  { time:"07:00–08:00", label:"Practice session", kind:"practice" },
+  { time:"09:30–10:00", label:"Instructions Review", kind:"practice" },
+  { time:"10:30–12:00", label:"Practice session", kind:"practice" },
+  { time:"14:00–15:30", label:"Practice session", kind:"practice" },
+  { time:"16:30–18:00", label:"Practice session", kind:"practice" },
+  { time:"21:00–22:30", label:"Practice session", kind:"practice" },
+];
+const MEALS = [
+  { time:"08:00–09:00", label:"Breakfast" },
+  { time:"12:00–13:30", label:"Lunch" },
+  { time:"20:00–21:00", label:"Dinner" },
+];
+
+const EXPERIMENT_TEAMS = {
+  PPS:"Léopoldine + Eugénie",
+  CFS:"Austin, with Renee or Leonardo",
+  FBI:"Bruno",
+};
+
+function experimentTeamFor(assignment) {
+  if (assignment.type !== "FBI") return assignment.team !== undefined ? assignment.team : EXPERIMENT_TEAMS[assignment.type];
+  const day = assignment.day;
+  if (day === "2026-09-07" || day === "2026-09-08") return "Bruno + Haotian";
+  if (day === "2026-09-06") return "Bruno";
+  if (day === "2026-09-10" || day === "2026-09-11") return "Bruno + Idil";
+  if (assignment.week === 2) return "Idil";
+  return "Bruno";
+}
+const EXPERIMENT_FULL_NAMES = {
+  PPS:"Peripersonal Space",
+  CFS:"Continuous Flash Suppression",
+  FBI:"Full Body Illusion",
+};
+
+function slotsFor(type, day) {
+  const sunday = SUNDAYS.has(day);
+  if (type === "FBI") {
+    const base = ["09:00–10:30","10:30–12:00","13:30–15:00","15:00–16:30","17:00–18:30","18:30–20:00"];
+    return sunday ? base.slice(2) : base;
+  }
+  const base = ["09:00–12:00","13:30–16:30","17:00–20:00"];
+  return sunday ? base.slice(1) : base;
+}
+function capFor(type){ return 1; }
+
+/* Timetable grid: 30-min rows from 07:00 to 22:30, header occupies grid line 1-2 */
+const TT_START_MIN = 7*60;
+function timeToRowLine(t) {
+  const [h,m] = t.trim().split(":").map(Number);
+  return 2 + Math.round((h*60+m - TT_START_MIN)/30);
+}
+const TT_LANE_COL = { PPS:3, CFS:4, FBI:5 }; // one column each — 1 concurrent session per type
+
+function buildTimetableBlocks(day) {
+  const blocks = [];
+  MEALS.forEach(m=>{
+    const [start,end] = m.time.split("–");
+    const r1=timeToRowLine(start), r2=timeToRowLine(end);
+    blocks.push({colStart:2,colEnd:6,r1,r2,html:`<div class="tt-block meal">${esc(m.label)}</div>`});
+  });
+  PRACTICE_SCHEDULE.forEach(s=>{
+    const [start,end] = s.time.split("–");
+    const r1=timeToRowLine(start), r2=timeToRowLine(end);
+    blocks.push({colStart:2,colEnd:3,r1,r2,html:`<div class="tt-block practice"><span>${esc(s.label)}</span><span style="font-size:9px;opacity:0.75;">${esc(s.time)}</span></div>`});
+  });
+  ["PPS","CFS","FBI"].forEach(type=>{
+    const slots = slotsFor(type, day);
+    slots.forEach(slot=>{
+      const [start,end] = slot.split("–");
+      const r1=timeToRowLine(start), r2=timeToRowLine(end);
+      const col = TT_LANE_COL[type];
+      const a = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
+      const cellKey = `${type}|${day}|${slot}|0`;
+      const inner = a
+        ? `<div class="chip ${type.toLowerCase()}" draggable="true" data-assignid="${a.id}" data-action="editassign" data-id="${a.id}">${a.participantId}${a.note?`<div class="note">${esc(a.note)}</div>`:""}</div>`
+        : `<div class="cell-empty" data-action="addassign" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}">+ add</div>`;
+      blocks.push({
+        colStart:col, colEnd:col+1, r1, r2,
+        html:`<div class="cell ${S.ui.dragOverKey===cellKey?'over':''}" data-cellkey="${cellKey}" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}" ondragover="event.preventDefault();" data-action-drop="drop" style="height:100%;">${inner}</div>`,
+      });
+    });
+  });
+  return blocks;
+}
+
+/* ---------------------------------------------------------------- */
+/* Seed participants                                                 */
+/* ---------------------------------------------------------------- */
+const SEED_PARTICIPANTS = [
+  {
+    "id": "E001MG",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 4:57 pm",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "16:57",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 10:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "10:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E006AR",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 12:00 pm",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "12:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 11:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "11:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E011EP",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 12:00 pm by car",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "12:00",
+    "arrivalLieu": "By car",
+    "departureRaw": "Sat 12 Sept – 11:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "11:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E010ML",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 1:40 pm",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "13:40",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 10:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "10:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E005BR",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – morning",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "morning",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – after lunch",
+    "departureDate": "2026-09-12",
+    "departureTime": "after lunch",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E008TO",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 7:00–8:00 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "19:00–20:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 10:00–11:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "10:00–11:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E018LM",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 4:46 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "16:46",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Awaiting information",
+    "departureDate": "",
+    "departureTime": "",
+    "departureLieu": "",
+    "status": "tbd"
+  },
+  {
+    "id": "E015DD",
+    "week": 1,
+    "arrivalRaw": "Sun 6 Sept – 1:20 pm",
+    "arrivalDate": "2026-09-06",
+    "arrivalTime": "13:20",
+    "arrivalLieu": "Lyon–Saint Exupéry Airport",
+    "departureRaw": "Sat 12 Sept – with Christian to Lyon airport",
+    "departureDate": "2026-09-12",
+    "departureTime": "",
+    "departureLieu": "With Christian to Lyon–Saint Exupéry Airport",
+    "status": "confirmed"
+  },
+  {
+    "id": "E014KW",
+    "week": 1,
+    "arrivalRaw": "Sun 6 Sept – 1:20 pm",
+    "arrivalDate": "2026-09-06",
+    "arrivalTime": "13:20",
+    "arrivalLieu": "Lyon–Saint Exupéry Airport",
+    "departureRaw": "Sat 12 Sept – with Christian to Lyon airport",
+    "departureDate": "2026-09-12",
+    "departureTime": "",
+    "departureLieu": "With Christian to Lyon–Saint Exupéry Airport",
+    "status": "confirmed"
+  },
+  {
+    "id": "E007AH",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 4:00 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "16:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 9:00 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "09:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E019BT",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 4:45 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "16:45",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Thu 10 Sept – 7:58 am",
+    "departureDate": "2026-09-10",
+    "departureTime": "07:58",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E017MP",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 4:45 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "16:45",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Thu 10 Sept – 7:58 am",
+    "departureDate": "2026-09-10",
+    "departureTime": "07:58",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E028KM",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 12:04 pm",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "12:04",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 4:00 pm",
+    "departureDate": "2026-09-12",
+    "departureTime": "16:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E021CW",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 4:00 pm by car",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "16:00",
+    "arrivalLieu": "By car",
+    "departureRaw": "Sat 12 Sept – takes the lamas to Lyon airport",
+    "departureDate": "2026-09-12",
+    "departureTime": "",
+    "departureLieu": "By car — takes the lamas to Lyon–Saint Exupéry Airport",
+    "status": "confirmed"
+  },
+  {
+    "id": "E013ML",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 12:26 pm by train",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "12:26",
+    "arrivalLieu": "Bellegarde Station (by train)",
+    "departureRaw": "Sat 12 Sept – 9:33 am by train",
+    "departureDate": "2026-09-12",
+    "departureTime": "09:33",
+    "departureLieu": "Bellegarde Station (by train)",
+    "status": "confirmed"
+  },
+  {
+    "id": "E026FD",
+    "week": 1,
+    "arrivalRaw": "Fri 4 Sept – 7:32 pm",
+    "arrivalDate": "2026-09-04",
+    "arrivalTime": "19:32",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 5:55 am",
+    "departureDate": "2026-09-12",
+    "departureTime": "05:55",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E009XN",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 4:59 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "16:59",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 11:02 am",
+    "departureDate": "2026-09-19",
+    "departureTime": "11:02",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E004NC",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 3:00 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "15:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept",
+    "departureDate": "2026-09-19",
+    "departureTime": "",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E012DF",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 2:59 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "14:59",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 11:02 am",
+    "departureDate": "2026-09-19",
+    "departureTime": "11:02",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E023MF",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 12:26 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "12:26",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Awaiting information",
+    "departureDate": "",
+    "departureTime": "",
+    "departureLieu": "",
+    "status": "tbd"
+  },
+  {
+    "id": "E022RG",
+    "week": 2,
+    "arrivalRaw": "Mon 14 Sept",
+    "arrivalDate": "2026-09-14",
+    "arrivalTime": "",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept",
+    "departureDate": "2026-09-19",
+    "departureTime": "",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E024DH",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept",
+    "departureDate": "2026-09-19",
+    "departureTime": "",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E025JL",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 6:04 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "18:04",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 10:00 am",
+    "departureDate": "2026-09-19",
+    "departureTime": "10:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E016ED",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 2:59 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "14:59",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 11:02 am",
+    "departureDate": "2026-09-19",
+    "departureTime": "11:02",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E027OO",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – 3:57 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "15:57",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 11:07 am",
+    "departureDate": "2026-09-19",
+    "departureTime": "11:07",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E002BL",
+    "week": 2,
+    "arrivalRaw": "Sat 12 Sept – approx. 4:00 pm",
+    "arrivalDate": "2026-09-12",
+    "arrivalTime": "~16:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept – 12:00 pm",
+    "departureDate": "2026-09-19",
+    "departureTime": "12:00",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
+  },
+  {
+    "id": "E020SF",
+    "week": 2,
+    "arrivalRaw": "Awaiting information",
+    "arrivalDate": "",
+    "arrivalTime": "",
+    "arrivalLieu": "",
+    "departureRaw": "Awaiting information",
+    "departureDate": "",
+    "departureTime": "",
+    "departureLieu": "",
+    "status": "tbd"
+  },
+  {
+    "id": "E003SA",
+    "week": 2,
+    "arrivalRaw": "Awaiting information",
+    "arrivalDate": "",
+    "arrivalTime": "",
+    "arrivalLieu": "",
+    "departureRaw": "Awaiting information",
+    "departureDate": "",
+    "departureTime": "",
+    "departureLieu": "",
+    "status": "tbd"
+  }
+];
+const ALL_IDS = SEED_PARTICIPANTS.map(p=>p.id);
+
+const SEED_ASSIGNMENTS = [
+  {
+    "participantId": "E019BT",
+    "type": "PPS",
+    "day": "2026-09-06",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E019BT-PPS-seed0"
+  },
+  {
+    "participantId": "E019BT",
+    "type": "CFS",
+    "day": "2026-09-07",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E019BT-CFS-seed1"
+  },
+  {
+    "participantId": "E019BT",
+    "type": "FBI",
+    "day": "2026-09-08",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E019BT-FBI-seed2"
+  },
+  {
+    "participantId": "E017MP",
+    "type": "PPS",
+    "day": "2026-09-06",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E017MP-PPS-seed3"
+  },
+  {
+    "participantId": "E017MP",
+    "type": "CFS",
+    "day": "2026-09-07",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E017MP-CFS-seed4"
+  },
+  {
+    "participantId": "E017MP",
+    "type": "FBI",
+    "day": "2026-09-08",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E017MP-FBI-seed5"
+  },
+  {
+    "participantId": "E001MG",
+    "type": "PPS",
+    "day": "2026-09-07",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E001MG-PPS-seed6"
+  },
+  {
+    "participantId": "E001MG",
+    "type": "CFS",
+    "day": "2026-09-06",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E001MG-CFS-seed7"
+  },
+  {
+    "participantId": "E013ML",
+    "type": "FBI",
+    "day": "2026-09-08",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E001MG-FBI-seed8"
+  },
+  {
+    "participantId": "E006AR",
+    "type": "PPS",
+    "day": "2026-09-07",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E006AR-PPS-seed9"
+  },
+  {
+    "participantId": "E006AR",
+    "type": "CFS",
+    "day": "2026-09-06",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E006AR-CFS-seed10"
+  },
+  {
+    "participantId": "E006AR",
+    "type": "FBI",
+    "day": "2026-09-08",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E006AR-FBI-seed11"
+  },
+  {
+    "participantId": "E011EP",
+    "type": "PPS",
+    "day": "2026-09-07",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E011EP-PPS-seed12"
+  },
+  {
+    "participantId": "E011EP",
+    "type": "CFS",
+    "day": "2026-09-08",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E011EP-CFS-seed13"
+  },
+  {
+    "participantId": "E011EP",
+    "type": "FBI",
+    "day": "2026-09-06",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E011EP-FBI-seed14"
+  },
+  {
+    "participantId": "E010ML",
+    "type": "PPS",
+    "day": "2026-09-08",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E010ML-PPS-seed15"
+  },
+  {
+    "participantId": "E010ML",
+    "type": "CFS",
+    "day": "2026-09-07",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E010ML-CFS-seed16"
+  },
+  {
+    "participantId": "E010ML",
+    "type": "FBI",
+    "day": "2026-09-06",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E010ML-FBI-seed17"
+  },
+  {
+    "participantId": "E005BR",
+    "type": "PPS",
+    "day": "2026-09-08",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E005BR-PPS-seed18"
+  },
+  {
+    "participantId": "E005BR",
+    "type": "CFS",
+    "day": "2026-09-09",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E005BR-CFS-seed19"
+  },
+  {
+    "participantId": "E005BR",
+    "type": "FBI",
+    "day": "2026-09-07",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E005BR-FBI-seed20"
+  },
+  {
+    "participantId": "E008TO",
+    "type": "PPS",
+    "day": "2026-09-08",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E008TO-PPS-seed21"
+  },
+  {
+    "participantId": "E008TO",
+    "type": "CFS",
+    "day": "2026-09-09",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E008TO-CFS-seed22"
+  },
+  {
+    "participantId": "E008TO",
+    "type": "FBI",
+    "day": "2026-09-07",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E008TO-FBI-seed23"
+  },
+  {
+    "participantId": "E015DD",
+    "type": "PPS",
+    "day": "2026-09-09",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E015DD-PPS-seed24"
+  },
+  {
+    "participantId": "E015DD",
+    "type": "CFS",
+    "day": "2026-09-08",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E015DD-CFS-seed25"
+  },
+  {
+    "participantId": "E015DD",
+    "type": "FBI",
+    "day": "2026-09-07",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E015DD-FBI-seed26"
+  },
+  {
+    "participantId": "E014KW",
+    "type": "PPS",
+    "day": "2026-09-09",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E014KW-PPS-seed27"
+  },
+  {
+    "participantId": "E014KW",
+    "type": "CFS",
+    "day": "2026-09-08",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E014KW-CFS-seed28"
+  },
+  {
+    "participantId": "E014KW",
+    "type": "FBI",
+    "day": "2026-09-07",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E014KW-FBI-seed29"
+  },
+  {
+    "participantId": "E007AH",
+    "type": "PPS",
+    "day": "2026-09-09",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E007AH-PPS-seed30"
+  },
+  {
+    "participantId": "E007AH",
+    "type": "CFS",
+    "day": "2026-09-10",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E007AH-CFS-seed31"
+  },
+  {
+    "participantId": "E007AH",
+    "type": "FBI",
+    "day": "2026-09-11",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E007AH-FBI-seed32"
+  },
+  {
+    "participantId": "E028KM",
+    "type": "PPS",
+    "day": "2026-09-10",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E028KM-PPS-seed33"
+  },
+  {
+    "participantId": "E028KM",
+    "type": "CFS",
+    "day": "2026-09-09",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E028KM-CFS-seed34"
+  },
+  {
+    "participantId": "E028KM",
+    "type": "FBI",
+    "day": "2026-09-11",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E028KM-FBI-seed35"
+  },
+  {
+    "participantId": "E021CW",
+    "type": "PPS",
+    "day": "2026-09-10",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E021CW-PPS-seed36"
+  },
+  {
+    "participantId": "E021CW",
+    "type": "CFS",
+    "day": "2026-09-11",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E021CW-CFS-seed37"
+  },
+  {
+    "participantId": "E013ML",
+    "type": "PPS",
+    "day": "2026-09-10",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E013ML-PPS-seed38"
+  },
+  {
+    "participantId": "E013ML",
+    "type": "CFS",
+    "day": "2026-09-11",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E013ML-CFS-seed39"
+  },
+  {
+    "participantId": "E026FD",
+    "type": "PPS",
+    "day": "2026-09-11",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E026FD-PPS-seed40"
+  },
+  {
+    "participantId": "E026FD",
+    "type": "CFS",
+    "day": "2026-09-10",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E026FD-CFS-seed41"
+  },
+  {
+    "participantId": "E022RG",
+    "type": "PPS",
+    "day": "2026-09-14",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E022RG-PPS-seed42"
+  },
+  {
+    "participantId": "E022RG",
+    "type": "CFS",
+    "day": "2026-09-15",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E022RG-CFS-seed43"
+  },
+  {
+    "participantId": "E022RG",
+    "type": "FBI",
+    "day": "2026-09-16",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E022RG-FBI-seed44"
+  },
+  {
+    "participantId": "E009XN",
+    "type": "PPS",
+    "day": "2026-09-13",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E009XN-PPS-seed45"
+  },
+  {
+    "participantId": "E009XN",
+    "type": "CFS",
+    "day": "2026-09-14",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E009XN-CFS-seed46"
+  },
+  {
+    "participantId": "E009XN",
+    "type": "FBI",
+    "day": "2026-09-15",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E009XN-FBI-seed47"
+  },
+  {
+    "participantId": "E004NC",
+    "type": "PPS",
+    "day": "2026-09-13",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E004NC-PPS-seed48"
+  },
+  {
+    "participantId": "E004NC",
+    "type": "CFS",
+    "day": "2026-09-14",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E004NC-CFS-seed49"
+  },
+  {
+    "participantId": "E004NC",
+    "type": "FBI",
+    "day": "2026-09-15",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E004NC-FBI-seed50"
+  },
+  {
+    "participantId": "E012DF",
+    "type": "PPS",
+    "day": "2026-09-14",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E012DF-PPS-seed51"
+  },
+  {
+    "participantId": "E012DF",
+    "type": "CFS",
+    "day": "2026-09-13",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E012DF-CFS-seed52"
+  },
+  {
+    "participantId": "E012DF",
+    "type": "FBI",
+    "day": "2026-09-15",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E012DF-FBI-seed53"
+  },
+  {
+    "participantId": "E024DH",
+    "type": "PPS",
+    "day": "2026-09-14",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E024DH-PPS-seed54"
+  },
+  {
+    "participantId": "E024DH",
+    "type": "CFS",
+    "day": "2026-09-13",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E024DH-CFS-seed55"
+  },
+  {
+    "participantId": "E024DH",
+    "type": "FBI",
+    "day": "2026-09-15",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E024DH-FBI-seed56"
+  },
+  {
+    "participantId": "E025JL",
+    "type": "PPS",
+    "day": "2026-09-15",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E025JL-PPS-seed57"
+  },
+  {
+    "participantId": "E025JL",
+    "type": "CFS",
+    "day": "2026-09-14",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E025JL-CFS-seed58"
+  },
+  {
+    "participantId": "E025JL",
+    "type": "FBI",
+    "day": "2026-09-13",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E025JL-FBI-seed59"
+  },
+  {
+    "participantId": "E016ED",
+    "type": "PPS",
+    "day": "2026-09-15",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E016ED-PPS-seed60"
+  },
+  {
+    "participantId": "E016ED",
+    "type": "CFS",
+    "day": "2026-09-16",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E016ED-CFS-seed61"
+  },
+  {
+    "participantId": "E016ED",
+    "type": "FBI",
+    "day": "2026-09-13",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E016ED-FBI-seed62"
+  },
+  {
+    "participantId": "E027OO",
+    "type": "PPS",
+    "day": "2026-09-15",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E027OO-PPS-seed63"
+  },
+  {
+    "participantId": "E027OO",
+    "type": "CFS",
+    "day": "2026-09-16",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E027OO-CFS-seed64"
+  },
+  {
+    "participantId": "E027OO",
+    "type": "FBI",
+    "day": "2026-09-14",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E027OO-FBI-seed65"
+  },
+  {
+    "participantId": "E002BL",
+    "type": "PPS",
+    "day": "2026-09-16",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E002BL-PPS-seed66"
+  },
+  {
+    "participantId": "E002BL",
+    "type": "CFS",
+    "day": "2026-09-15",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E002BL-CFS-seed67"
+  },
+  {
+    "participantId": "E002BL",
+    "type": "FBI",
+    "day": "2026-09-14",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E002BL-FBI-seed68"
+  },
+  {
+    "participantId": "E018LM",
+    "type": "PPS",
+    "day": "2026-09-11",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E018LM-PPS-fill1000"
+  },
+  {
+    "participantId": "E018LM",
+    "type": "CFS",
+    "day": "2026-09-10",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E018LM-CFS-fill1001"
+  },
+  {
+    "participantId": "E008TO",
+    "type": "FBI",
+    "day": "2026-09-10",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E018LM-FBI-fill1002"
+  },
+  {
+    "participantId": "E003SA",
+    "type": "PPS",
+    "day": "2026-09-16",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E003SA-PPS-fill1003"
+  },
+  {
+    "participantId": "E003SA",
+    "type": "CFS",
+    "day": "2026-09-15",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E003SA-CFS-fill1004"
+  },
+  {
+    "participantId": "E003SA",
+    "type": "FBI",
+    "day": "2026-09-14",
+    "slot": "13:30–15:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E003SA-FBI-fill1005"
+  },
+  {
+    "participantId": "E020SF",
+    "type": "PPS",
+    "day": "2026-09-16",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E020SF-PPS-fill1006"
+  },
+  {
+    "participantId": "E020SF",
+    "type": "CFS",
+    "day": "2026-09-17",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E020SF-CFS-fill1007"
+  },
+  {
+    "participantId": "E020SF",
+    "type": "FBI",
+    "day": "2026-09-14",
+    "slot": "15:00–16:30",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E020SF-FBI-fill1008"
+  },
+  {
+    "participantId": "E023MF",
+    "type": "PPS",
+    "day": "2026-09-17",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E023MF-PPS-fill1009"
+  },
+  {
+    "participantId": "E023MF",
+    "type": "CFS",
+    "day": "2026-09-16",
+    "slot": "17:00–20:00",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E023MF-CFS-fill1010"
+  },
+  {
+    "participantId": "E023MF",
+    "type": "FBI",
+    "day": "2026-09-18",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 2,
+    "manual": true,
+    "id": "E023MF-FBI-fill1011"
+  },
+  {
+    "participantId": "E001MG",
+    "type": "FBI",
+    "day": "2026-09-10",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E013ML-FBI-fill1012"
+  },
+  {
+    "participantId": "E011EP",
+    "type": "FBI",
+    "day": "2026-09-10",
+    "slot": "17:00–18:30",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E021CW-FBI-fill1013"
+  },
+  {
+    "participantId": "E010ML",
+    "type": "FBI",
+    "day": "2026-09-10",
+    "slot": "18:30–20:00",
+    "note": "",
+    "week": 1,
+    "manual": true,
+    "id": "E026FD-FBI-fill1014"
+  }
+];
+
+/* ---------------------------------------------------------------- */
+/* Scheduler                                                         */
+/* ---------------------------------------------------------------- */
+function eligibleDays(p) {
+  if (p.status === "tbd" || !p.arrivalDate || !p.departureDate) return [];
+  return RETREAT_DAYS[p.week].filter(d => d >= p.arrivalDate && d <= p.departureDate);
+}
+
+function generateSchedule(participants, week, existingAssignments) {
+  const kept = existingAssignments.filter(a => a.week !== week || a.manual);
+  const capacityUsed = {};
+  const dayUsedByParticipant = {};
+  const alreadyHasType = {};
+  for (const a of kept) {
+    const k = a.day+"|"+a.type+"|"+a.slot;
+    capacityUsed[k] = (capacityUsed[k]||0)+1;
+    (dayUsedByParticipant[a.participantId] ??= new Set()).add(a.day);
+    (alreadyHasType[a.participantId] ??= new Set()).add(a.type);
+  }
+  const weekParticipants = participants.filter(p=>p.week===week);
+  const withDays = weekParticipants
+    .map(p=>({p, days: eligibleDays(p)}))
+    .filter(({p,days}) => days.length>0 && !(alreadyHasType[p.id] && alreadyHasType[p.id].size>=3))
+    .sort((a,b)=>a.days.length-b.days.length);
+
+  const newAssignments = [];
+  const unassigned = [];
+
+  for (const {p,days} of withDays) {
+    const usedDays = dayUsedByParticipant[p.id] || new Set();
+    const have = alreadyHasType[p.id] || new Set();
+    let allOk = true;
+    for (const type of ["PPS","CFS","FBI"]) {
+      if (have.has(type)) continue;
+      let placed=false;
+      for (const day of days) {
+        if (usedDays.has(day)) continue;
+        for (const slot of slotsFor(type, day)) {
+          const k = day+"|"+type+"|"+slot;
+          const used = capacityUsed[k]||0;
+          if (used < capFor(type)) {
+            capacityUsed[k]=used+1;
+            usedDays.add(day);
+            newAssignments.push({
+              id: p.id+"-"+type+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
+              participantId:p.id, type, day, slot, note:"", week, manual:false,
+            });
+            placed=true; break;
+          }
+        }
+        if (placed) break;
+      }
+      if (!placed) allOk=false;
+    }
+    if (!allOk) unassigned.push(p.id);
+  }
+  return { assignments:[...kept, ...newAssignments], unassigned };
+}
+
+/* ---------------------------------------------------------------- */
+/* Persistence — window.storage when available, else in-memory only  */
+/* (for a real static deployment, swap loadState/saveState for calls */
+/* to your own backend / Firebase / etc. — see notes at bottom)      */
+/* ---------------------------------------------------------------- */
+const STORE_KEYS = ["participants","assignments","links"];
+const hasStorage = typeof window !== "undefined" && window.storage;
+
+async function loadState() {
+  const state = { participants: SEED_PARTICIPANTS, assignments: SEED_ASSIGNMENTS, links: [] };
+  if (!hasStorage) return state;
+  for (const key of STORE_KEYS) {
+    try {
+      const res = await window.storage.get(key, true);
+      if (res && res.value) state[key] = JSON.parse(res.value);
+    } catch(e) { /* key not set yet */ }
+  }
+  return state;
+}
+async function saveKey(key, value) {
+  if (!hasStorage) return;
+  try { await window.storage.set(key, JSON.stringify(value), true); }
+  catch(e) { console.error("storage set failed", key, e); }
+}
+
+/* ---------------------------------------------------------------- */
+/* Global state + render loop                                        */
+/* ---------------------------------------------------------------- */
+const S = {
+  ready: false,
+  session: null, // {role:'admin'} | {role:'participant', id}
+  participants: [],
+  assignments: [],
+  links: [],
+  ui: {
+    loginError: "",
+    pTab: "schedule",
+    aTab: "schedule",
+    week: 1,
+    activeDay: null,
+    dragOverKey: null,
+    editingAssignmentId: null,
+    editDraft: null,
+    editMode: null,
+    swapTargetId: null,
+    addTarget: null,
+    addParticipantId: null,
+    viewingSessionId: null,
+    linkForm: { label:"", url:"", scope:"global" },
+  },
+};
+
+function render() { document.getElementById("app").innerHTML = App(); attachEvents(); }
+function esc(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toMinutes(t){ const [h,m]=t.trim().split(":").map(Number); return h*60+m; }
+function rangesOverlap(rangeA, rangeB){
+  const [a1,a2] = rangeA.split("–").map(toMinutes);
+  const [b1,b2] = rangeB.split("–").map(toMinutes);
+  return a1 < b2 && b1 < a2;
+}
+
+async function persist(key, value) {
+  S[key] = value;
+  render();
+  await saveKey(key, value);
+}
+
+/* ---------------------------------------------------------------- */
+/* Screens                                                           */
+/* ---------------------------------------------------------------- */
+function App() {
+  if (!S.ready) return `<div class="center-screen" style="color:#a39c8e;">Loading…</div>`;
+  if (!S.session) return LoginScreen();
+  if (S.session.role === "participant") return ParticipantView();
+  return AdminView();
+}
+
+function LoginScreen() {
+  return `
+  <div class="center-screen">
+    <div style="width:100%;max-width:380px;">
+      <div style="text-align:center;margin-bottom:28px;">
+        <h1 style="font-size:22px;font-weight:600;">Nature of Mind Retreat</h1>
+        <p style="margin-top:4px;font-size:14px;color:#8a8478;">Enter your ID to access your schedule</p>
+      </div>
+      <form id="login-form" class="card" style="padding:22px;">
+        <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#a39c8e;margin-bottom:6px;">Participant or admin ID</label>
+        <input id="login-input" class="input" placeholder="e.g. E001MG" autofocus autocomplete="off" />
+        ${S.ui.loginError ? `<p class="error-text">⚠ ${esc(S.ui.loginError)}</p>` : ""}
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:14px;">Continue</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function ParticipantView() {
+  const p = S.participants.find(pp=>pp.id===S.session.id);
+  const days = p.week===1 ? WEEK1_DAYS : WEEK2_DAYS;
+  const mine = S.assignments.filter(a=>a.participantId===p.id);
+  const byDay = {};
+  mine.forEach(a=>{ (byDay[a.day] ??= []).push(a); });
+  const myLinks = S.links.filter(l=>l.scope==="global" || l.scope===p.id);
+
+  return `
+  <header class="topbar"><div class="topbar-inner">
+    <div><p class="eyebrow">Participant</p><h1 class="page-title">${p.id} · Week ${p.week}</h1></div>
+    <button class="btn-ghost" data-action="logout">⏻ Log out</button>
+  </div></header>
+  <div class="content">
+    <div class="tabs">
+      <button class="tab-btn ${S.ui.pTab==='schedule'?'active':''}" data-action="ptab" data-tab="schedule">Day-by-day Schedule</button>
+      <button class="tab-btn ${S.ui.pTab==='visual'?'active':''}" data-action="ptab" data-tab="visual">Weekly overview</button>
+      <button class="tab-btn ${S.ui.pTab==='questionnaires'?'active':''}" data-action="ptab" data-tab="questionnaires">Questionnaires</button>
+    </div>
+    ${S.ui.pTab==='schedule' ? `
+      ${p.status==='tbd' ? `<div class="warn-banner">⚠ Your arrival/departure info is still pending — contact the team if needed.</div>` : ""}
+      ${days.map(d => {
+        const isSat = d.weekday==='Sat';
+        const isInstall = d.key===INSTALLATION_DAY;
+        const items = byDay[d.key] || [];
+        return `<div class="day-card">
+          <div class="day-head">${d.label}${isSat?'<span class="tag">Arrival / departure day</span>':''}${isInstall?'<span class="tag">Installation day</span>':''}</div>
+          ${isInstall ? `
+            <div class="row" style="color:#8a8478;">
+              ${d.key===p.arrivalDate ? `Arrival: ${esc(p.arrivalRaw)}` : "No sessions — team & equipment set-up day"}
+            </div>` : isSat ? `
+            <div class="row" style="color:#8a8478;">
+              ${d.key===p.arrivalDate ? `Arrival: ${esc(p.arrivalRaw)}` : ""}
+              ${d.key===p.departureDate ? `Departure: ${esc(p.departureRaw)}` : ""}
+              ${d.key!==p.arrivalDate && d.key!==p.departureDate ? "No sessions" : ""}
+            </div>` : `
+            ${(() => {
+              const mySession = items[0];
+              const agenda = [
+                ...PRACTICE_SCHEDULE
+                  .filter(s => !mySession || !rangesOverlap(s.time, mySession.slot))
+                  .map(s => ({ start: toMinutes(s.time.split("–")[0]), html: `<div class="row ${s.kind}"><span class="time">${s.time}</span><span class="label">${s.label}</span></div>` })),
+                ...MEALS.map(m => ({ start: toMinutes(m.time.split("–")[0]), html: `<div class="row meal"><span class="time">${m.time}</span><span class="label">${esc(m.label)}</span></div>` })),
+              ];
+              if (mySession) {
+                agenda.push({
+                  start: toMinutes(mySession.slot.split("–")[0]),
+                  html: `<div class="row exp-${mySession.type.toLowerCase()}" style="cursor:pointer;" data-action="viewsession" data-id="${mySession.id}"><span class="time" style="font-weight:600;color:#6b6459;">${mySession.slot}</span><span class="pill pill-${mySession.type.toLowerCase()}">Expérience ${esc(EXPERIMENT_FULL_NAMES[mySession.type])}</span></div>`,
+                });
+              }
+              agenda.sort((x,y)=>x.start-y.start);
+              return agenda.map(x=>x.html).join("");
+            })()}
+          `}
+        </div>`;
+      }).join("")}
+    ` : S.ui.pTab==='visual' ? ParticipantVisualSchedule(p, mine) : `
+      <div class="links-list">
+        ${myLinks.length===0 ? `<p style="color:#a39c8e;font-size:14px;">No questionnaires assigned yet.</p>` : ""}
+        ${myLinks.map(l=>`<a class="link-item" href="${esc(l.url)}" target="_blank" rel="noreferrer">
+          <span style="font-weight:600;">🔗 ${esc(l.label)}</span><span style="font-size:12px;color:#a39c8e;">Open →</span>
+        </a>`).join("")}
+      </div>
+    `}
+  </div>
+  ${S.ui.viewingSessionId ? SessionInfoModal() : ""}
+  `;
+}
+
+function SessionInfoModal() {
+  const a = S.assignments.find(x=>x.id===S.ui.viewingSessionId);
+  if (!a) return "";
+  const team = experimentTeamFor(a);
+  return `
+  <div class="modal-overlay" data-action="closesession">
+    <div class="modal" onclick="event.stopPropagation();">
+      <div class="modal-head">
+        <h3 style="font-size:16px;font-weight:600;">Expérience ${esc(EXPERIMENT_FULL_NAMES[a.type])}</h3>
+        <button class="icon-btn" data-action="closesession">×</button>
+      </div>
+      <p style="font-size:12px;color:#a39c8e;margin:0 0 14px;">${dayShortLabel(a.day)} · ${a.slot}</p>
+      <div class="modal-section">
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Room / location</label>
+        <p style="font-size:14px;font-weight:600;margin:0 0 10px;">${a.room ? esc(a.room) : "Not set yet — check with the team"}</p>
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Experimenters</label>
+        <p style="font-size:14px;font-weight:600;margin:0;">${esc(team)}</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function ParticipantVisualSchedule(p, mine) {
+  const dayKeys = RETREAT_DAYS[p.week];
+  const rows = 31;
+  const hourLabels = [];
+  for (let h=7; h<=22; h++) {
+    const r = timeToRowLine(`${String(h).padStart(2,"0")}:00`);
+    hourLabels.push(`<div class="tt-time" style="grid-column:1;grid-row:${r}/${r+2};">${h}:00</div>`);
+  }
+  const blocks = [];
+  MEALS.forEach(m=>{
+    const [start,end] = m.time.split("–");
+    const r1=timeToRowLine(start), r2=timeToRowLine(end);
+    blocks.push(`<div style="grid-column:2/${dayKeys.length+2};grid-row:${r1}/${r2};"><div class="tt-block meal">${esc(m.label)}</div></div>`);
+  });
+  dayKeys.forEach((day, i)=>{
+    const col = i + 2;
+    const sessions = mine.filter(a=>a.day===day);
+    PRACTICE_SCHEDULE.forEach(s=>{
+      if (sessions.some(a=>rangesOverlap(s.time, a.slot))) return;
+      const [start,end] = s.time.split("–");
+      const r1=timeToRowLine(start), r2=timeToRowLine(end);
+      blocks.push(`<div style="grid-column:${col};grid-row:${r1}/${r2};"><div class="tt-block practice"><span>${esc(s.label)}</span></div></div>`);
+    });
+    sessions.forEach(mySession=>{
+      const [start,end] = mySession.slot.split("–");
+      const r1=timeToRowLine(start), r2=timeToRowLine(end);
+      const c = mySession.type.toLowerCase();
+      blocks.push(`<div style="grid-column:${col};grid-row:${r1}/${r2};z-index:2;"><div class="participant-experiment ${c}" data-action="viewsession" data-id="${mySession.id}"><span class="exp-title">${mySession.type}</span><span class="exp-time">${mySession.slot}</span></div></div>`);
+    });
+  });
+  return `
+  <div class="timetable-wrap">
+    <div class="timetable" style="grid-template-columns:56px repeat(${dayKeys.length},minmax(90px,1fr));grid-template-rows:34px repeat(${rows},26px);">
+      <div class="tt-head time-head" style="grid-column:1;"></div>
+      ${dayKeys.map((d,i)=>`<div class="tt-head" style="grid-column:${i+2};">${dayShortLabel(d)}</div>`).join("")}
+      ${hourLabels.join("")}
+      ${blocks.join("")}
+    </div>
+  </div>
+`;
+}
+
+function AdminView() {
+  return `
+  <header class="topbar"><div class="topbar-inner">
+    <div><p class="eyebrow">Admin</p><h1 class="page-title">Nature of Mind Retreat — Control panel</h1></div>
+    <button class="btn-ghost" data-action="logout">⏻ Log out</button>
+  </div></header>
+  <div class="content">
+    <div class="tabs">
+      <button class="tab-btn ${S.ui.aTab==='schedule'?'active':''}" data-action="atab" data-tab="schedule">🗓 Master schedule</button>
+      <button class="tab-btn ${S.ui.aTab==='participants'?'active':''}" data-action="atab" data-tab="participants">👥 Arrival/Departure</button>
+      <button class="tab-btn ${S.ui.aTab==='links'?'active':''}" data-action="atab" data-tab="links">🔗 Questionnaire links</button>
+    </div>
+    ${S.ui.aTab==='schedule' ? MasterSchedule() : S.ui.aTab==='participants' ? ParticipantsTab() : LinksTab()}
+  </div>
+  ${S.ui.editingAssignmentId ? NoteModal() : ""}
+  ${S.ui.addTarget ? AddModal() : ""}
+  `;
+}
+
+const ARRIVAL_DAY_1 = "2026-09-05";
+const ARRIVAL_DAY_2 = "2026-09-12";
+
+const TEAM_ARRIVALS = {
+  "2026-09-04": [
+    { name:"Antoine", note:"by car, morning" },
+    { name:"Eugénie", note:"by car, morning" },
+    { name:"Léopoldine", note:"by car, morning" },
+    { name:"Leonardo", note:"by car, morning" },
+    { name:"Michael", note:"by car, morning" },
+    { name:"Austin", note:"by car, morning" },
+    { name:"Renée", note:"by car, morning" },
+  ],
+  "2026-09-05": [
+    { name:"Bruno", note:"by car, morning" },
+    { name:"Idil", note:"by car, morning" },
+  ],
+  "2026-09-12": [
+    { name:"Jahred", note:"" },
+  ],
+};
+
+function currentDays() {
+  const days = S.ui.week===1 ? WEEK1_DAYS : WEEK2_DAYS;
+  const arrivalDay = S.ui.week===1 ? ARRIVAL_DAY_1 : ARRIVAL_DAY_2;
+  return days.filter(d=>d.weekday!=="Sat" || d.key===arrivalDay);
+}
+
+function MasterSchedule() {
+  if (!S.ui.activeDay) S.ui.activeDay = currentDays()[0].key;
+  const days = currentDays();
+  return `
+  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+    <div class="week-switch">
+      <button class="week-btn ${S.ui.week===1?'active':''}" data-action="setweek" data-week="1">Week 1</button>
+      <button class="week-btn ${S.ui.week===2?'active':''}" data-action="setweek" data-week="2">Week 2</button>
+    </div>
+  </div>
+  <div class="day-strip">
+    ${days.map(d=>`<button class="day-chip ${S.ui.activeDay===d.key?'active':''}" data-action="setday" data-day="${d.key}">${d.short}</button>`).join("")}
+  </div>
+  ${Timetable(S.ui.activeDay)}`;
+}
+
+function DayArrivalsView(day, opts) {
+  const { title, showSteps } = opts;
+  const arrivals = S.participants
+    .filter(p=>p.arrivalDate===day)
+    .sort((a,b)=>(a.arrivalTime||"zz").localeCompare(b.arrivalTime||"zz"));
+  const departures = S.participants
+    .filter(p=>p.departureDate===day)
+    .sort((a,b)=>(a.departureTime||"zz").localeCompare(b.departureTime||"zz"));
+  const team = TEAM_ARRIVALS[day] || [];
+  const steps = ["Arrival", "Participant installation", "Inclusion / Consent signing", "Questionnaire"];
+  const personRow = (p, timeField, locationField) => `
+    <div class="row" style="justify-content:space-between;gap:16px;">
+      <span style="font-family:monospace;font-weight:600;">${p.id}</span>
+      <span style="color:#8a8478;text-align:right;">${esc(p[timeField])||'—'}${p[locationField]?` · ${esc(p[locationField])}`:''}</span>
+    </div>`;
+  return `
+  <div class="timetable-wrap" style="padding:20px;">
+    ${title ? `<p style="font-size:15px;font-weight:600;color:#6b6459;margin:0 0 16px;">${esc(title)}</p>` : ""}
+    ${showSteps ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">${steps.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;"><span style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1f4a44;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="font-size:13px;font-weight:600;color:#6b6459;">${s}</span>${i<steps.length-1 ? `<span style="color:#cfc9bc;">→</span>` : ""}</div>`).join("")}</div>` : ""}
+    ${team.length>0 ? `<p style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#a39c8e;margin:0 0 10px;">Team arrivals</p><div style="border:1px solid #ece8de;border-radius:12px;overflow:hidden;margin-bottom:20px;">${team.map(t=>`<div class="row" style="justify-content:space-between;"><span style="font-weight:600;">${esc(t.name)}</span><span style="color:#8a8478;">${esc(t.note)||'—'}</span></div>`).join("")}</div>` : ""}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <div>
+        <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#a39c8e;margin:0 0 10px;">Arrivals</p>
+        <div style="border:1px solid #ece8de;border-radius:12px;overflow:hidden;">${arrivals.length===0 ? `<p style="padding:16px;color:#cfc9bc;font-size:13px;">No participant arrivals recorded for this day.</p>` : arrivals.map(p=>personRow(p,"arrivalTime","arrivalLieu")).join("")}</div>
+      </div>
+      <div>
+        <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#a39c8e;margin:0 0 10px;">Departures</p>
+        <div style="border:1px solid #ece8de;border-radius:12px;overflow:hidden;">${departures.length===0 ? `<p style="padding:16px;color:#cfc9bc;font-size:13px;">No participant departures recorded for this day.</p>` : departures.map(p=>personRow(p,"departureTime","departureLieu")).join("")}</div>
+      </div>
+    </div>
+  </div>`;
+}
+function Timetable(day) {
+  if (day === INSTALLATION_DAY) return DayArrivalsView(day, { title:"Installation — team &amp; equipment set-up day", showSteps:false });
+  if (day === ARRIVAL_DAY_1) return DayArrivalsView(day, { title:"Arrivals", showSteps:true });
+  if (day === ARRIVAL_DAY_2) return DayArrivalsView(day, { title:"Arrivals", showSteps:false });
+  const rows = 31; // 30-min rows, 07:00 → 22:30
+  const blocks = buildTimetableBlocks(day);
+  const hourLabels = [];
+  for (let h=7; h<=22; h++) {
+    const r = timeToRowLine(`${String(h).padStart(2,"0")}:00`);
+    hourLabels.push(`<div class="tt-time" style="grid-column:1;grid-row:${r}/${r+2};">${h}:00</div>`);
+  }
+  return `
+  <div class="timetable-wrap">
+    <div class="timetable" style="grid-template-rows:34px repeat(${rows},26px);">
+      <div class="tt-head time-head" style="grid-column:1;"></div>
+      <div class="tt-head" style="grid-column:2;">Meditation</div>
+      <div class="tt-head" style="grid-column:3;">PPS</div>
+      <div class="tt-head" style="grid-column:4;">CFS</div>
+      <div class="tt-head" style="grid-column:5;">FBI</div>
+      ${hourLabels.join("")}
+      ${blocks.map(b=>`<div style="grid-column:${b.colStart}/${b.colEnd};grid-row:${b.r1}/${b.r2};">${b.html}</div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function dayShortLabel(key) {
+  const found = [...WEEK1_DAYS, ...WEEK2_DAYS].find(d=>d.key===key);
+  return found ? found.short : key;
+}
+
+function NoteModal() {
+  const a = S.assignments.find(x=>x.id===S.ui.editingAssignmentId);
+  if (!a) return "";
+  const mode = S.ui.editMode; // null = menu, "move" | "swap" | "free" = detail screen
+  const team = experimentTeamFor(a);
+  const room = a.room || "";
+  const draft = S.ui.editDraft || { day:a.day, slot:a.slot };
+  const isSlotFree = (day, slot) => !S.assignments.some(x=>x.id!==a.id && x.type===a.type && x.day===day && x.slot===slot);
+  const dayOptions = RETREAT_DAYS[a.week].filter(d=>slotsFor(a.type, d).some(s=>isSlotFree(d, s)));
+  const slotOptions = slotsFor(a.type, draft.day).filter(s=>isSlotFree(draft.day, s));
+
+  const swapCandidates = S.assignments.filter(x=>x.id!==a.id && x.type===a.type && x.week===a.week);
+  const swapTargetId = S.ui.swapTargetId || (swapCandidates[0] ? swapCandidates[0].id : null);
+
+  const backToMenu = `<button class="btn-ghost" style="margin-bottom:10px;" data-action="setmode" data-mode="menu">← Reschedule</button>`;
+  const backToRoot = `<button class="btn-ghost" style="margin-bottom:10px;" data-action="setmode" data-mode="">← Back</button>`;
+
+  let body = "";
+  if (mode === null) {
+    body = `
+      <div class="modal-section">
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Team running it</label>
+        <input id="team-input" type="text" class="input" style="margin-bottom:10px;" value="${esc(team)}" placeholder="e.g. Léopoldine + Eugénie" />
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Room / location</label>
+        <input id="room-input" type="text" class="input" style="margin-bottom:10px;" value="${esc(room)}" placeholder="e.g. Salle A" />
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Note</label>
+        <textarea id="note-input" rows="3" placeholder="e.g. last-minute change, swap reason…">${esc(a.note)}</textarea>
+        <button class="btn-primary" style="width:100%;margin-top:12px;" data-action="setmode" data-mode="menu">Reschedule →</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn-primary" data-action="savenote" data-id="${a.id}">Save</button>
+      </div>`;
+  } else if (mode === "menu") {
+    body = `
+      ${backToRoot}
+      <p class="modal-section-title" style="margin-bottom:10px;">Reschedule</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="move">Change date</button>
+        <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="swap">Swap</button>
+        <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="free">Free slot</button>
+      </div>`;
+  } else if (mode === "move") {
+    body = `
+      ${backToMenu}
+      <div class="modal-section">
+        <p class="modal-section-title">Change date</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <select id="draft-day" class="input">
+            ${dayOptions.map(d=>`<option value="${d}" ${d===draft.day?'selected':''}>${dayShortLabel(d)}</option>`).join("")}
+          </select>
+          <select id="draft-slot" class="input">
+            ${slotOptions.map(s=>`<option value="${esc(s)}" ${s===draft.slot?'selected':''}>${s}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <button class="btn-ghost" style="color:#b5533c;" data-action="deleteassign" data-id="${a.id}">Remove</button>
+        <button class="btn-primary" data-action="savenote" data-id="${a.id}">Save</button>
+      </div>`;
+  } else if (mode === "swap") {
+    const target = swapCandidates.find(x=>x.id===swapTargetId);
+    body = `
+      ${backToMenu}
+      ${swapCandidates.length === 0
+        ? `<p style="font-size:13px;color:#a39c8e;">No other ${a.type} session this week to swap with.</p>`
+        : `
+      <div class="modal-section">
+        <p class="modal-section-title">Swap with</p>
+        <select id="swap-target" class="input">
+          ${swapCandidates.map(x=>`<option value="${x.id}" ${x.id===swapTargetId?'selected':''}>${x.participantId} — ${dayShortLabel(x.day)} ${x.slot}</option>`).join("")}
+        </select>
+        ${target ? `<p style="font-size:12px;color:#8a8478;margin:10px 0 0;">${a.participantId} (${dayShortLabel(a.day)} ${a.slot}) ↔ ${target.participantId} (${dayShortLabel(target.day)} ${target.slot})</p>` : ""}
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn-primary" data-action="doswap" data-id="${a.id}">Swap</button>
+      </div>`}`;
+  } else if (mode === "free") {
+    body = `
+      ${backToMenu}
+      <div class="modal-section">
+        <p style="font-size:13px;color:#6b6459;margin:0;">This removes <b>${a.participantId}</b> from this ${a.type} slot (${dayShortLabel(a.day)}, ${a.slot}), leaving it open for someone else.</p>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn-primary" style="background:#b5533c;" data-action="deleteassign" data-id="${a.id}">Free this slot</button>
+      </div>`;
+  }
+
+  return `
+  <div class="modal-overlay" data-action="closemodal">
+    <div class="modal" onclick="event.stopPropagation();">
+      <div class="modal-head">
+        <h3 style="font-size:16px;font-weight:600;">${a.type} — ${a.participantId}</h3>
+        <button class="icon-btn" data-action="closemodal">×</button>
+      </div>
+      ${body}
+    </div>
+  </div>`;
+}
+
+function AddModal() {
+  const { type, day, slot } = S.ui.addTarget;
+  const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
+  const eligible = S.participants.filter(p=>
+    p.week === week &&
+    !S.assignments.some(x=>x.participantId===p.id && x.type===type) &&
+    !S.assignments.some(x=>x.participantId===p.id && x.day===day)
+  );
+  const selectedId = S.ui.addParticipantId || (eligible[0] ? eligible[0].id : null);
+  return `
+  <div class="modal-overlay" data-action="closeaddmodal">
+    <div class="modal" onclick="event.stopPropagation();">
+      <div class="modal-head">
+        <h3 style="font-size:16px;font-weight:600;">${type} — ${dayShortLabel(day)}, ${slot}</h3>
+        <button class="icon-btn" data-action="closeaddmodal">×</button>
+      </div>
+      ${eligible.length === 0
+        ? `<p style="font-size:13px;color:#a39c8e;">No eligible participant for this slot — everyone this week is either already assigned to ${type}, or already has another session that day.</p>
+           <div style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="btn-ghost" data-action="closeaddmodal">Close</button></div>`
+        : `
+      <div class="modal-section">
+        <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Participant</label>
+        <select id="add-participant" class="input">
+          ${eligible.map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.id}</option>`).join("")}
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn-primary" data-action="confirmadd">Add</button>
+      </div>`}
+    </div>
+  </div>`;
+}
+
+function ParticipantsTab() {
+  return `
+  <div class="card" style="overflow-x:auto;">
+    <table class="ptable">
+      <thead><tr>
+        <th>ID</th><th>Wk</th>
+        <th>Arrival date</th><th>Arrival time</th><th>Arrival location</th>
+        <th>Departure date</th><th>Departure time</th><th>Departure location</th>
+      </tr></thead>
+      <tbody>
+        ${S.participants.map(p=>`<tr>
+          <td style="font-family:monospace;font-weight:600;">${p.id}</td>
+          <td style="color:#a39c8e;">${p.week}</td>
+          <td><input type="date" value="${p.arrivalDate}" style="${p.arrivalDate?'':'background:#fbf1de;border-color:#e8cf9e;'}" data-action="editp" data-id="${p.id}" data-field="arrivalDate" /></td>
+          <td><input type="text" value="${esc(p.arrivalTime)}" style="width:80px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="arrivalTime" /></td>
+          <td><input type="text" value="${esc(p.arrivalLieu)}" style="width:130px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="arrivalLieu" /></td>
+          <td><input type="date" value="${p.departureDate}" style="${p.departureDate?'':'background:#fbf1de;border-color:#e8cf9e;'}" data-action="editp" data-id="${p.id}" data-field="departureDate" /></td>
+          <td><input type="text" value="${esc(p.departureTime)}" style="width:80px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="departureTime" /></td>
+          <td><input type="text" value="${esc(p.departureLieu)}" style="width:130px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="departureLieu" /></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function LinksTab() {
+  const f = S.ui.linkForm;
+  return `
+  <div class="card" style="padding:16px;margin-bottom:16px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;">Add questionnaire link</h3>
+    <div class="link-form">
+      <input class="input" id="link-label" placeholder="Label (e.g. Pre-retreat survey)" value="${esc(f.label)}" />
+      <input class="input" id="link-url" placeholder="LimeSurvey URL" value="${esc(f.url)}" />
+      <select class="input" id="link-scope">
+        <option value="global" ${f.scope==='global'?'selected':''}>All participants</option>
+        ${S.participants.map(p=>`<option value="${p.id}" ${f.scope===p.id?'selected':''}>${p.id} only</option>`).join("")}
+      </select>
+    </div>
+    <button class="btn-primary" style="margin-top:10px;" data-action="addlink">+ Add link</button>
+  </div>
+  <div class="card">
+    ${S.links.length===0 ? `<p style="padding:16px;color:#cfc9bc;font-size:14px;">No links yet.</p>` : ""}
+    ${S.links.map(l=>`<div class="row" style="justify-content:space-between;">
+      <div><p style="font-weight:600;margin:0;">${esc(l.label)}</p><p style="font-size:12px;color:#a39c8e;margin:2px 0 0;">${l.scope==='global'?'All participants':esc(l.scope)} · ${esc(l.url)}</p></div>
+      <button class="icon-btn" data-action="removelink" data-id="${l.id}">🗑</button>
+    </div>`).join("")}
+  </div>`;
+}
+
+/* ---------------------------------------------------------------- */
+/* Event wiring                                                      */
+/* ---------------------------------------------------------------- */
+function attachEvents() {
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) loginForm.addEventListener("submit", e=>{
+    e.preventDefault();
+    const val = document.getElementById("login-input").value.trim().toUpperCase();
+    if (val===ADMIN_CODE) { S.session={role:"admin"}; S.ui.loginError=""; render(); return; }
+    if (ALL_IDS.includes(val)) { S.session={role:"participant", id:val}; S.ui.loginError=""; render(); return; }
+    S.ui.loginError = "ID not recognized. Please check and try again."; render();
+  });
+
+  document.querySelectorAll("[data-action]").forEach(el=>{
+    const action = el.dataset.action;
+    if (["drop","dragstart"].includes(el.dataset.actionDrop) || el.dataset.actionDrag) return; // handled separately below
+  });
+
+  document.querySelectorAll('[data-action="logout"]').forEach(el=>el.onclick=()=>{ S.session=null; render(); });
+  document.querySelectorAll('[data-action="ptab"]').forEach(el=>el.onclick=()=>{ S.ui.pTab=el.dataset.tab; render(); });
+  document.querySelectorAll('[data-action="viewsession"]').forEach(el=>el.onclick=()=>{ S.ui.viewingSessionId=el.dataset.id; render(); });
+  document.querySelectorAll('[data-action="closesession"]').forEach(el=>el.onclick=()=>{ S.ui.viewingSessionId=null; render(); });
+  document.querySelectorAll('[data-action="atab"]').forEach(el=>el.onclick=()=>{ S.ui.aTab=el.dataset.tab; render(); });
+  document.querySelectorAll('[data-action="setweek"]').forEach(el=>el.onclick=()=>{ S.ui.week=Number(el.dataset.week); S.ui.activeDay=null; render(); });
+  document.querySelectorAll('[data-action="setday"]').forEach(el=>el.onclick=()=>{ S.ui.activeDay=el.dataset.day; render(); });
+
+  document.querySelectorAll('[data-action="editassign"]').forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      if (el._justDragged) { el._justDragged=false; return; }
+      const a = S.assignments.find(x=>x.id===el.dataset.id);
+      S.ui.editingAssignmentId = el.dataset.id;
+      S.ui.editDraft = a ? { day:a.day, slot:a.slot } : null;
+      S.ui.editMode = null;
+      S.ui.swapTargetId = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-action="closemodal"]').forEach(el=>el.onclick=()=>{
+    S.ui.editingAssignmentId=null; S.ui.editDraft=null; S.ui.editMode=null; S.ui.swapTargetId=null; render();
+  });
+  document.querySelectorAll('[data-action="setmode"]').forEach(el=>el.onclick=()=>{
+    S.ui.editMode = el.dataset.mode || null;
+    S.ui.swapTargetId = null;
+    render();
+  });
+
+  const daySelect = document.getElementById("draft-day");
+  if (daySelect) daySelect.addEventListener("change", ()=>{
+    const a = S.assignments.find(x=>x.id===S.ui.editingAssignmentId);
+    const newDay = daySelect.value;
+    const isFree = (slot) => !S.assignments.some(x=>x.id!==a.id && x.type===a.type && x.day===newDay && x.slot===slot);
+    const firstSlot = slotsFor(a.type, newDay).find(isFree) || "";
+    S.ui.editDraft = { day:newDay, slot:firstSlot };
+    render();
+  });
+  const slotSelect = document.getElementById("draft-slot");
+  if (slotSelect) slotSelect.addEventListener("change", ()=>{
+    S.ui.editDraft.slot = slotSelect.value;
+  });
+  const swapSelect = document.getElementById("swap-target");
+  if (swapSelect) swapSelect.addEventListener("change", ()=>{
+    S.ui.swapTargetId = swapSelect.value;
+    render();
+  });
+
+  document.querySelectorAll('[data-action="doswap"]').forEach(el=>el.onclick=()=>{
+    const a = S.assignments.find(x=>x.id===el.dataset.id);
+    const target = S.assignments.find(x=>x.id===S.ui.swapTargetId);
+    if (!a || !target) return;
+    const conflictA = S.assignments.some(x=>x.id!==a.id && x.id!==target.id && x.participantId===a.participantId && x.day===target.day);
+    if (conflictA) { alert(a.participantId+" already has another session on "+dayShortLabel(target.day)+"."); return; }
+    const conflictB = S.assignments.some(x=>x.id!==a.id && x.id!==target.id && x.participantId===target.participantId && x.day===a.day);
+    if (conflictB) { alert(target.participantId+" already has another session on "+dayShortLabel(a.day)+"."); return; }
+    const next = S.assignments.map(x=>{
+      if (x.id===a.id) return {...x, day:target.day, slot:target.slot, manual:true};
+      if (x.id===target.id) return {...x, day:a.day, slot:a.slot, manual:true};
+      return x;
+    });
+    S.ui.editingAssignmentId = null;
+    S.ui.editDraft = null;
+    S.ui.swapTargetId = null;
+    persist("assignments", next);
+  });
+
+  document.querySelectorAll('[data-action="savenote"]').forEach(el=>el.onclick=()=>{
+    const a = S.assignments.find(x=>x.id===el.dataset.id);
+    const noteEl = document.getElementById("note-input");
+    const teamEl = document.getElementById("team-input");
+    const roomEl = document.getElementById("room-input");
+    const note = noteEl ? noteEl.value : a.note;
+    const team = teamEl ? teamEl.value : (a.team !== undefined ? a.team : EXPERIMENT_TEAMS[a.type]);
+    const room = roomEl ? roomEl.value : (a.room || "");
+    const { day, slot } = S.ui.editDraft;
+    if (day !== a.day || slot !== a.slot) {
+      const occupying = S.assignments.find(x=>x.id!==a.id && x.type===a.type && x.day===day && x.slot===slot);
+      if (occupying) { alert("This slot is already taken by "+occupying.participantId+"."); return; }
+      const conflict = S.assignments.find(x=>x.id!==a.id && x.participantId===a.participantId && x.day===day);
+      if (conflict) { alert("This participant already has a session that day."); return; }
+    }
+    const next = S.assignments.map(x=>x.id===el.dataset.id ? {...x, note, team, room, day, slot, manual:true} : x);
+    S.ui.editingAssignmentId = null;
+    S.ui.editDraft = null;
+    persist("assignments", next);
+  });
+  document.querySelectorAll('[data-action="deleteassign"]').forEach(el=>el.onclick=()=>{
+    const next = S.assignments.filter(a=>a.id!==el.dataset.id);
+    S.ui.editingAssignmentId = null;
+    S.ui.editDraft = null;
+    S.ui.editMode = null;
+    persist("assignments", next);
+  });
+
+  document.querySelectorAll('[data-action="addassign"]').forEach(el=>{
+    el.addEventListener("click", ()=>{
+      S.ui.addTarget = { type:el.dataset.type, day:el.dataset.day, slot:el.dataset.slot };
+      S.ui.addParticipantId = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-action="closeaddmodal"]').forEach(el=>el.onclick=()=>{
+    S.ui.addTarget = null; S.ui.addParticipantId = null; render();
+  });
+  const addSelect = document.getElementById("add-participant");
+  if (addSelect) addSelect.addEventListener("change", ()=>{ S.ui.addParticipantId = addSelect.value; });
+  document.querySelectorAll('[data-action="confirmadd"]').forEach(el=>el.onclick=()=>{
+    const sel = document.getElementById("add-participant");
+    const participantId = sel ? sel.value : S.ui.addParticipantId;
+    const { type, day, slot } = S.ui.addTarget;
+    if (!participantId) return;
+    const occupying = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
+    if (occupying) { alert("This slot is already taken by "+occupying.participantId+"."); return; }
+    const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
+    const next = [...S.assignments, {
+      id: participantId+"-"+type+"-"+Date.now(),
+      participantId, type, day, slot, note:"", week, manual:true,
+    }];
+    S.ui.addTarget = null;
+    S.ui.addParticipantId = null;
+    persist("assignments", next);
+  });
+
+  // drag & drop
+  document.querySelectorAll('.chip[draggable="true"]').forEach(el=>{
+    el.addEventListener("dragstart", (e)=>{
+      e.dataTransfer.setData("text/plain", el.dataset.assignid);
+      el._justDragged = true;
+    });
+  });
+  document.querySelectorAll('.cell[data-action-drop="drop"]').forEach(el=>{
+    el.addEventListener("dragenter", ()=>{ S.ui.dragOverKey = el.dataset.cellkey; render(); });
+    el.addEventListener("dragleave", ()=>{ if (S.ui.dragOverKey===el.dataset.cellkey){ S.ui.dragOverKey=null; render(); } });
+    el.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      S.ui.dragOverKey = null;
+      const rawId = e.dataTransfer.getData("text/plain");
+      const moved = S.assignments.find(a=>a.id===rawId);
+      if (!moved) { render(); return; }
+      const target = { type: el.dataset.type, day: el.dataset.day, slot: el.dataset.slot };
+      if (moved.type !== target.type) { render(); return; }
+      const capacity = capFor(target.type);
+      const occupying = S.assignments.filter(a=>a.id!==moved.id && a.type===target.type && a.day===target.day && a.slot===target.slot);
+      if (occupying.length >= capacity) { alert("This slot is already full."); render(); return; }
+      const conflict = S.assignments.find(a=>a.id!==moved.id && a.participantId===moved.participantId && a.day===target.day);
+      if (conflict) { alert("This participant already has a session that day."); render(); return; }
+      const next = S.assignments.map(a=>a.id===moved.id ? {...a, day:target.day, slot:target.slot, manual:true} : a);
+      persist("assignments", next);
+    });
+  });
+
+  // participants table
+  document.querySelectorAll('[data-action="editp"]').forEach(el=>{
+    el.addEventListener("change", ()=>{
+      const next = S.participants.map(p=>p.id===el.dataset.id ? {...p, [el.dataset.field]: el.value} : p);
+      persist("participants", next);
+    });
+  });
+
+  // links tab
+  const addLinkBtn = document.querySelector('[data-action="addlink"]');
+  if (addLinkBtn) addLinkBtn.onclick = ()=>{
+    const label = document.getElementById("link-label").value.trim();
+    const url = document.getElementById("link-url").value.trim();
+    const scope = document.getElementById("link-scope").value;
+    if (!label || !url) return;
+    const next = [...S.links, { id:"link-"+Date.now(), label, url, scope }];
+    S.ui.linkForm = { label:"", url:"", scope:"global" };
+    persist("links", next);
+  };
+  document.querySelectorAll('[data-action="removelink"]').forEach(el=>el.onclick=()=>{
+    persist("links", S.links.filter(l=>l.id!==el.dataset.id));
+  });
+}
+
+/* ---------------------------------------------------------------- */
+/* Boot                                                               */
+/* ---------------------------------------------------------------- */
+(async function boot(){
+  const state = await loadState();
+  S.participants = state.participants;
+  S.assignments = state.assignments;
+  S.links = state.links;
+  S.ready = true;
+  render();
+})();
+</script>
+</body>
+</html>
