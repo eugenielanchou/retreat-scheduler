@@ -123,12 +123,37 @@
   .modal-section-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#a39c8e; margin:0 0 10px; }
   .icon-btn { background:none; border:none; color:#a39c8e; cursor:pointer; }
   .icon-btn:hover { color:#292521; }
+
+  /* Firebase connection status indicator */
+  .conn-status { position:fixed; bottom:14px; right:14px; display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #e4e0d8; border-radius:999px; padding:6px 12px; font-size:12px; color:#6b6459; box-shadow:0 2px 8px rgba(0,0,0,0.08); z-index:100; }
+  .conn-dot { width:8px; height:8px; border-radius:50%; background:#cfc9bc; }
+  .conn-dot.ok { background:#1f4a44; }
+  .conn-dot.err { background:#b5533c; }
 </style>
 </head>
 <body>
 <div id="app"></div>
 
+<!-- Firebase SDK (compat build — works with plain <script> tags, no bundler needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
+/* ---------------------------------------------------------------- */
+/* Firebase setup                                                    */
+/* ---------------------------------------------------------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyBVuCBRC3nGrhZf-1yY7w1pO8tuPsdVTZo",
+  authDomain: "retreat-scheduler-cd6fd.firebaseapp.com",
+  databaseURL: "https://retreat-scheduler-cd6fd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "retreat-scheduler-cd6fd",
+  storageBucket: "retreat-scheduler-cd6fd.firebasestorage.app",
+  messagingSenderId: "627161701969",
+  appId: "1:627161701969:web:4e386a76b5318f6f496270"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 /* ---------------------------------------------------------------- */
 /* Reference data                                                    */
 /* ---------------------------------------------------------------- */
@@ -169,12 +194,12 @@ const PRACTICE_SCHEDULE = [
   { time:"10:30–12:00", label:"Practice session", kind:"practice" },
   { time:"14:00–15:30", label:"Practice session", kind:"practice" },
   { time:"16:30–18:00", label:"Practice session", kind:"practice" },
-  { time:"21:00–22:30", label:"Practice session", kind:"practice" },
+  { time:"20:00–21:30", label:"Practice session", kind:"practice" },
 ];
 const MEALS = [
   { time:"08:00–09:00", label:"Breakfast" },
   { time:"12:00–13:30", label:"Lunch" },
-  { time:"20:00–21:00", label:"Dinner" },
+  { time:"18:30–20:00", label:"Dinner" },
 ];
 
 const EXPERIMENT_TEAMS = {
@@ -222,12 +247,12 @@ function buildTimetableBlocks(day) {
   MEALS.forEach(m=>{
     const [start,end] = m.time.split("–");
     const r1=timeToRowLine(start), r2=timeToRowLine(end);
-    blocks.push({colStart:2,colEnd:6,r1,r2,html:`<div class="tt-block meal">${esc(m.label)}</div>`});
+    blocks.push({colStart:2,colEnd:6,r1,r2,z:0,html:`<div class="tt-block meal">${esc(m.label)}</div>`});
   });
   PRACTICE_SCHEDULE.forEach(s=>{
     const [start,end] = s.time.split("–");
     const r1=timeToRowLine(start), r2=timeToRowLine(end);
-    blocks.push({colStart:2,colEnd:3,r1,r2,html:`<div class="tt-block practice"><span>${esc(s.label)}</span><span style="font-size:9px;opacity:0.75;">${esc(s.time)}</span></div>`});
+    blocks.push({colStart:2,colEnd:3,r1,r2,z:1,html:`<div class="tt-block practice"><span>${esc(s.label)}</span><span style="font-size:9px;opacity:0.75;">${esc(s.time)}</span></div>`});
   });
   ["PPS","CFS","FBI"].forEach(type=>{
     const slots = slotsFor(type, day);
@@ -241,7 +266,7 @@ function buildTimetableBlocks(day) {
         ? `<div class="chip ${type.toLowerCase()}" draggable="true" data-assignid="${a.id}" data-action="editassign" data-id="${a.id}">${a.participantId}${a.note?`<div class="note">${esc(a.note)}</div>`:""}</div>`
         : `<div class="cell-empty" data-action="addassign" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}">+ add</div>`;
       blocks.push({
-        colStart:col, colEnd:col+1, r1, r2,
+        colStart:col, colEnd:col+1, r1, r2, z:2,
         html:`<div class="cell ${S.ui.dragOverKey===cellKey?'over':''}" data-cellkey="${cellKey}" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}" ondragover="event.preventDefault();" data-action-drop="drop" style="height:100%;">${inner}</div>`,
       });
     });
@@ -1523,28 +1548,37 @@ function generateSchedule(participants, week, existingAssignments) {
 }
 
 /* ---------------------------------------------------------------- */
-/* Persistence — window.storage when available, else in-memory only  */
-/* (for a real static deployment, swap loadState/saveState for calls */
-/* to your own backend / Firebase / etc. — see notes at bottom)      */
+/* Persistence — Firebase Realtime Database                          */
+/* All 18 tablets + any computer read/write the same database, so    */
+/* changes made on one device appear on every other device.          */
 /* ---------------------------------------------------------------- */
 const STORE_KEYS = ["participants","assignments","links"];
-const hasStorage = typeof window !== "undefined" && window.storage;
 
 async function loadState() {
   const state = { participants: SEED_PARTICIPANTS, assignments: SEED_ASSIGNMENTS, links: [] };
-  if (!hasStorage) return state;
   for (const key of STORE_KEYS) {
     try {
-      const res = await window.storage.get(key, true);
-      if (res && res.value) state[key] = JSON.parse(res.value);
-    } catch(e) { /* key not set yet */ }
+      const snap = await db.ref(key).get();
+      if (snap.exists()) state[key] = snap.val();
+    } catch(e) { console.error("firebase get failed", key, e); }
   }
   return state;
 }
 async function saveKey(key, value) {
-  if (!hasStorage) return;
-  try { await window.storage.set(key, JSON.stringify(value), true); }
-  catch(e) { console.error("storage set failed", key, e); }
+  try {
+    await db.ref(key).set(value);
+    setConnStatus("ok");
+  } catch(e) {
+    console.error("firebase set failed", key, e);
+    setConnStatus("err");
+  }
+}
+function setConnStatus(status) {
+  S.ui.connStatus = status;
+  const dot = document.getElementById("conn-dot");
+  const label = document.getElementById("conn-label");
+  if (dot) { dot.className = "conn-dot " + (status==="ok" ? "ok" : status==="err" ? "err" : ""); }
+  if (label) { label.textContent = status==="ok" ? "Synchronisé" : status==="err" ? "Erreur de synchro" : "Connexion…"; }
 }
 
 /* ---------------------------------------------------------------- */
@@ -1571,10 +1605,15 @@ const S = {
     addParticipantId: null,
     viewingSessionId: null,
     linkForm: { label:"", url:"", scope:"global" },
+    connStatus: "connecting",
   },
 };
 
-function render() { document.getElementById("app").innerHTML = App(); attachEvents(); }
+function render() {
+  document.getElementById("app").innerHTML = App();
+  attachEvents();
+  renderConnStatus();
+}
 function esc(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function toMinutes(t){ const [h,m]=t.trim().split(":").map(Number); return h*60+m; }
 function rangesOverlap(rangeA, rangeB){
@@ -1587,6 +1626,19 @@ async function persist(key, value) {
   S[key] = value;
   render();
   await saveKey(key, value);
+}
+
+function renderConnStatus() {
+  if (!S.session) return; // don't show on login screen
+  let el = document.getElementById("conn-status-widget");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "conn-status-widget";
+    el.className = "conn-status";
+    el.innerHTML = `<span id="conn-dot" class="conn-dot"></span><span id="conn-label">Connexion…</span>`;
+    document.body.appendChild(el);
+  }
+  setConnStatus(S.ui.connStatus);
 }
 
 /* ---------------------------------------------------------------- */
@@ -1720,7 +1772,7 @@ function ParticipantVisualSchedule(p, mine) {
   MEALS.forEach(m=>{
     const [start,end] = m.time.split("–");
     const r1=timeToRowLine(start), r2=timeToRowLine(end);
-    blocks.push(`<div style="grid-column:2/${dayKeys.length+2};grid-row:${r1}/${r2};"><div class="tt-block meal">${esc(m.label)}</div></div>`);
+    blocks.push(`<div style="grid-column:2/${dayKeys.length+2};grid-row:${r1}/${r2};z-index:0;"><div class="tt-block meal">${esc(m.label)}</div></div>`);
   });
   dayKeys.forEach((day, i)=>{
     const col = i + 2;
@@ -1865,7 +1917,7 @@ function Timetable(day) {
       <div class="tt-head" style="grid-column:4;">CFS</div>
       <div class="tt-head" style="grid-column:5;">FBI</div>
       ${hourLabels.join("")}
-      ${blocks.map(b=>`<div style="grid-column:${b.colStart}/${b.colEnd};grid-row:${b.r1}/${b.r2};">${b.html}</div>`).join("")}
+      ${blocks.map(b=>`<div style="grid-column:${b.colStart}/${b.colEnd};grid-row:${b.r1}/${b.r2};z-index:${b.z!==undefined?b.z:1};">${b.html}</div>`).join("")}
     </div>
   </div>`;
 }
@@ -2258,7 +2310,22 @@ function attachEvents() {
   S.assignments = state.assignments;
   S.links = state.links;
   S.ready = true;
+  setConnStatus("ok");
   render();
+
+  // Real-time sync — any change made on one tablet/computer is pushed
+  // live to every other device connected to this page.
+  STORE_KEYS.forEach(key => {
+    db.ref(key).on("value", (snap) => {
+      if (snap.exists()) {
+        S[key] = snap.val();
+        render();
+      }
+    }, (err) => {
+      console.error("firebase listener error", key, err);
+      setConnStatus("err");
+    });
+  });
 })();
 </script>
 </body>
