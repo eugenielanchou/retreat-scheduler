@@ -40,6 +40,7 @@
   .pill-pps { background:#1f4a44; }
   .pill-cfs { background:#c08a2e; }
   .pill-fbi { background:#b5533c; }
+  .pill-pheno { background:#9b6b47; }
 
   .day-card { border:1px solid #e4e0d8; border-radius:14px; background:#fff; overflow:hidden; margin-bottom:14px; }
   .day-head { background:#faf9f5; border-bottom:1px solid #f0eee7; padding:10px 16px; font-weight:600; font-size:14px; }
@@ -51,6 +52,7 @@
   .row.exp-pps { background:#e6f0ee; }
   .row.exp-cfs { background:#f8efdd; }
   .row.exp-fbi { background:#f7e8e2; }
+  .row.exp-pheno { background:#f0e8dd; }
 
   .warn-banner { display:flex; gap:8px; align-items:flex-start; border:1px solid #e8cf9e; background:#fbf1de; color:#8a5f14; border-radius:10px; padding:12px 16px; font-size:14px; margin-bottom:16px; }
 
@@ -66,7 +68,7 @@
   .day-chip.active { background:#292521; color:#fff; border-color:#292521; }
 
   .timetable-wrap { border:1px solid #e4e0d8; border-radius:14px; background:#fff; overflow-x:auto; }
-  .timetable { display:grid; grid-template-columns:56px repeat(4,minmax(100px,1fr)); min-width:560px;
+  .timetable { display:grid; grid-template-columns:56px repeat(5,minmax(100px,1fr)); min-width:660px;
     background-image:
       repeating-linear-gradient(to bottom, transparent 0, transparent 51px, #d8d2c6 51px, #d8d2c6 52px),
       repeating-linear-gradient(to bottom, transparent 0, transparent 25px, #f0eee7 25px, #f0eee7 26px);
@@ -85,6 +87,7 @@
   .chip.pps { background:#e6f0ee; color:#173c37; border-color:#bcdad3; }
   .chip.cfs { background:#f8efdd; color:#6e4d10; border-color:#e8cf9e; }
   .chip.fbi { background:#f7e8e2; color:#7a3524; border-color:#eec3b3; }
+  .chip.pheno { background:#f0e8dd; color:#654321; border-color:#d9c4aa; }
   .participant-experiment {
     height:100%; min-height:0; box-sizing:border-box; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:3px; padding:3px 6px; margin:0 4px;
@@ -93,6 +96,7 @@
   .participant-experiment.pps { background:#e6f0ee; color:#173c37; border-color:#bcdad3; }
   .participant-experiment.cfs { background:#f8efdd; color:#6e4d10; border-color:#e8cf9e; }
   .participant-experiment.fbi { background:#f7e8e2; color:#7a3524; border-color:#eec3b3; }
+  .participant-experiment.pheno { background:#f0e8dd; color:#654321; border-color:#d9c4aa; }
   .participant-experiment .exp-title { font-size:12px; line-height:1.1; }
   .participant-experiment .exp-time { font-size:9px; line-height:1.1; font-weight:400; opacity:0.78; white-space:nowrap; }
   .chip .note { font-weight:400; font-size:9px; opacity:0.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -137,6 +141,7 @@
 <!-- Firebase SDK (compat build — works with plain <script> tags, no bundler needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <script>
 /* ---------------------------------------------------------------- */
@@ -153,6 +158,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+firebase.auth().signInAnonymously().catch((e) => console.error("firebase auth failed", e));
 
 /* ---------------------------------------------------------------- */
 /* Reference data                                                    */
@@ -206,6 +212,7 @@ const EXPERIMENT_TEAMS = {
   PPS:"Léopoldine + Eugénie",
   CFS:"Austin, with Renee or Leonardo",
   FBI:"Bruno",
+  PHENO:"",
 };
 
 function experimentTeamFor(assignment) {
@@ -221,13 +228,54 @@ const EXPERIMENT_FULL_NAMES = {
   PPS:"Peripersonal Space",
   CFS:"Continuous Flash Suppression",
   FBI:"Full Body Illusion",
+  PHENO:"Phenomenology",
 };
+
+const PARTICIPANT_NAMES = {
+  "E001MG": "Mario",
+  "E002BL": "Bonnie",
+  "E003SA": "Simone",
+  "E004NC": "Norman",
+  "E005BR": "Bernard",
+  "E006AR": "Alex",
+  "E007AH": "Andreas",
+  "E008TO": "Tara",
+  "E009XN": "Xavier",
+  "E010ML": "Marcela",
+  "E012DF": "Didier",
+  "E028KM": "Katerine",
+  "E013ML": "Marc",
+  "E014KW": "Lama Kesang",
+  "E015DD": "Lama Dawa",
+  "E016ED": "Evaristo",
+  "E017MP": "Michaela",
+  "E018LM": "Lorella",
+  "E019BT": "Babara",
+  "E020SF": "Sebastien",
+  "E021CW": "Christian",
+  "E022RG": "Raphael",
+  "E023MF": "Michael",
+  "E024DH": "Diego",
+  "E025JL": "Jean-Christophe",
+  "E026FD": "Fionnuala",
+  "E027OO": "Okan",
+  "E044BJ": "Betty",
+  "E045TD": "Titi",
+};
+
+function getParticipantName(id) {
+  return PARTICIPANT_NAMES[id] || id;
+}
 
 function slotsFor(type, day) {
   const sunday = SUNDAYS.has(day);
   if (type === "FBI") {
     const base = ["09:00–10:30","10:30–12:00","13:30–15:00","15:00–16:30","17:00–18:30","18:30–20:00"];
     return sunday ? base.slice(2) : base;
+  }
+  if (type === "PHENO") {
+    const base = ["09:00–11:00","13:30–15:30","17:00–19:00"];
+    return sunday ? base.slice(1) : base;
   }
   const base = ["09:00–12:00","13:30–16:30","17:00–20:00"];
   return sunday ? base.slice(1) : base;
@@ -240,37 +288,86 @@ function timeToRowLine(t) {
   const [h,m] = t.trim().split(":").map(Number);
   return 2 + Math.round((h*60+m - TT_START_MIN)/30);
 }
-const TT_LANE_COL = { PPS:3, CFS:4, FBI:5 }; // one column each — 1 concurrent session per type
+const TT_LANE_COL = { PPS:3, CFS:4, FBI:5, PHENO:6 }; // one column each — 1 concurrent session per type
 
-function buildTimetableBlocks(day) {
+function buildTimetableBlocks(day, isArrivalDay) {
   const blocks = [];
+  const colOffset = isArrivalDay ? 2 : 0;
+
   MEALS.forEach(m=>{
     const [start,end] = m.time.split("–");
     const r1=timeToRowLine(start), r2=timeToRowLine(end);
-    blocks.push({colStart:2,colEnd:6,r1,r2,z:0,html:`<div class="tt-block meal">${esc(m.label)}</div>`});
+    const endCol = isArrivalDay ? 8 : 7;
+    blocks.push({colStart:2,colEnd:endCol,r1,r2,z:0,html:`<div class="tt-block meal">${esc(m.label)}</div>`});
   });
-  PRACTICE_SCHEDULE.forEach(s=>{
-    const [start,end] = s.time.split("–");
-    const r1=timeToRowLine(start), r2=timeToRowLine(end);
-    blocks.push({colStart:2,colEnd:3,r1,r2,z:1,html:`<div class="tt-block practice"><span>${esc(s.label)}</span><span style="font-size:9px;opacity:0.75;">${esc(s.time)}</span></div>`});
-  });
-  ["PPS","CFS","FBI"].forEach(type=>{
-    const slots = slotsFor(type, day);
-    slots.forEach(slot=>{
-      const [start,end] = slot.split("–");
+
+  if (!isArrivalDay) {
+    PRACTICE_SCHEDULE.forEach(s=>{
+      const [start,end] = s.time.split("–");
       const r1=timeToRowLine(start), r2=timeToRowLine(end);
-      const col = TT_LANE_COL[type];
-      const a = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
-      const cellKey = `${type}|${day}|${slot}|0`;
-      const inner = a
-        ? `<div class="chip ${type.toLowerCase()}" draggable="true" data-assignid="${a.id}" data-action="editassign" data-id="${a.id}">${a.participantId}${a.note?`<div class="note">${esc(a.note)}</div>`:""}</div>`
-        : `<div class="cell-empty" data-action="addassign" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}">+ add</div>`;
-      blocks.push({
-        colStart:col, colEnd:col+1, r1, r2, z:2,
-        html:`<div class="cell ${S.ui.dragOverKey===cellKey?'over':''}" data-cellkey="${cellKey}" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}" ondragover="event.preventDefault();" data-action-drop="drop" style="height:100%;">${inner}</div>`,
+      blocks.push({colStart:2,colEnd:3,r1,r2,z:1,html:`<div class="tt-block practice"><span>${esc(s.label)}</span><span style="font-size:9px;opacity:0.75;">${esc(s.time)}</span></div>`});
+    });
+
+    // Add arrivals for this day
+    S.participants.forEach(p=>{
+      if (p.arrivalDate === day && p.arrivalTime && p.arrivalTime !== "morning" && p.arrivalTime !== "after lunch") {
+        const r = timeToRowLine(p.arrivalTime);
+        blocks.push({
+          colStart: 2, colEnd: 3, r1: r, r2: r+1, z: 2,
+          html: `<div style="height:100%;background:#e6f0ee;border-left:3px solid #1f4a44;padding:4px;font-size:11px;font-weight:600;color:#173c37;overflow:hidden;text-overflow:ellipsis;">${getParticipantName(p.id)} ↓</div>`
+        });
+      }
+    });
+
+    // Add departures for this day
+    S.participants.forEach(p=>{
+      if (p.departureDate === day && p.departureTime && p.departureTime !== "morning" && p.departureTime !== "after lunch") {
+        const r = timeToRowLine(p.departureTime);
+        blocks.push({
+          colStart: 2, colEnd: 3, r1: r, r2: r+1, z: 2,
+          html: `<div style="height:100%;background:#f7e8e2;border-left:3px solid #b5533c;padding:4px;font-size:11px;font-weight:600;color:#7a3524;overflow:hidden;text-overflow:ellipsis;">${getParticipantName(p.id)} ↑</div>`
+        });
+      }
+    });
+
+    ["PPS","CFS","FBI","PHENO"].forEach(type=>{
+      const slots = slotsFor(type, day);
+      slots.forEach(slot=>{
+        const [start,end] = slot.split("–");
+        const r1=timeToRowLine(start), r2=timeToRowLine(end);
+        let col = TT_LANE_COL[type];
+        const a = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
+        const cellKey = `${type}|${day}|${slot}|0`;
+        const inner = a
+          ? `<div class="chip ${type.toLowerCase()}" draggable="true" data-assignid="${a.id}" data-action="editassign" data-id="${a.id}">${getParticipantName(a.participantId)}${a.note?`<div class="note">${esc(a.note)}</div>`:""}</div>`
+          : `<div class="cell-empty" data-action="addassign" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}">+ add</div>`;
+        blocks.push({
+          colStart:col, colEnd:col+1, r1, r2, z:2,
+          html:`<div class="cell ${S.ui.dragOverKey===cellKey?'over':''}" data-cellkey="${cellKey}" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}" ondragover="event.preventDefault();" data-action-drop="drop" style="height:100%;">${inner}</div>`,
+        });
       });
     });
-  });
+  } else {
+    const isFirstArrivalDay = day === ARRIVAL_DAY_1;
+    const arrivalColOffset = isFirstArrivalDay ? 0 : 1;
+    ["PPS","CFS","FBI","PHENO"].forEach(type=>{
+      const slots = slotsFor(type, day);
+      slots.forEach(slot=>{
+        const [start,end] = slot.split("–");
+        const r1=timeToRowLine(start), r2=timeToRowLine(end);
+        let col = TT_LANE_COL[type] + arrivalColOffset;
+        const a = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
+        const cellKey = `${type}|${day}|${slot}|0`;
+        const inner = a
+          ? `<div class="chip ${type.toLowerCase()}" draggable="true" data-assignid="${a.id}" data-action="editassign" data-id="${a.id}">${getParticipantName(a.participantId)}${a.note?`<div class="note">${esc(a.note)}</div>`:""}</div>`
+          : `<div class="cell-empty" data-action="addassign" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}">+ add</div>`;
+        blocks.push({
+          colStart:col, colEnd:col+1, r1, r2, z:2,
+          html:`<div class="cell ${S.ui.dragOverKey===cellKey?'over':''}" data-cellkey="${cellKey}" data-type="${type}" data-day="${day}" data-slot="${esc(slot)}" ondragover="event.preventDefault();" data-action-drop="drop" style="height:100%;">${inner}</div>`,
+        });
+      });
+    });
+  }
   return blocks;
 }
 
@@ -298,19 +395,6 @@ const SEED_PARTICIPANTS = [
     "arrivalDate": "2026-09-05",
     "arrivalTime": "12:00",
     "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 11:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "11:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E011EP",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 12:00 pm by car",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "12:00",
-    "arrivalLieu": "By car",
     "departureRaw": "Sat 12 Sept – 11:00 am",
     "departureDate": "2026-09-12",
     "departureTime": "11:00",
@@ -435,19 +519,6 @@ const SEED_PARTICIPANTS = [
     "status": "confirmed"
   },
   {
-    "id": "E028KM",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 12:04 pm",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "12:04",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 4:00 pm",
-    "departureDate": "2026-09-12",
-    "departureTime": "16:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
     "id": "E021CW",
     "week": 1,
     "arrivalRaw": "Sat 5 Sept – 4:00 pm by car",
@@ -458,6 +529,19 @@ const SEED_PARTICIPANTS = [
     "departureDate": "2026-09-12",
     "departureTime": "",
     "departureLieu": "By car — takes the lamas to Lyon–Saint Exupéry Airport",
+    "status": "confirmed"
+  },
+  {
+    "id": "E028KM",
+    "week": 1,
+    "arrivalRaw": "Sat 5 Sept – 12:04 pm",
+    "arrivalDate": "2026-09-05",
+    "arrivalTime": "12:04",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 12 Sept – 4:00 pm",
+    "departureDate": "2026-09-12",
+    "departureTime": "16:00",
+    "departureLieu": "Bellegarde Station",
     "status": "confirmed"
   },
   {
@@ -641,6 +725,19 @@ const SEED_PARTICIPANTS = [
     "departureTime": "",
     "departureLieu": "",
     "status": "tbd"
+  },
+  {
+    "id": "E045TD",
+    "week": 2,
+    "arrivalRaw": "Tue 8 Sept – 3:00 pm",
+    "arrivalDate": "2026-09-08",
+    "arrivalTime": "15:00",
+    "arrivalLieu": "Bellegarde Station",
+    "departureRaw": "Sat 19 Sept",
+    "departureDate": "2026-09-19",
+    "departureTime": "",
+    "departureLieu": "Bellegarde Station",
+    "status": "confirmed"
   }
 ];
 const ALL_IDS = SEED_PARTICIPANTS.map(p=>p.id);
@@ -765,36 +862,6 @@ const SEED_ASSIGNMENTS = [
     "week": 1,
     "manual": false,
     "id": "E006AR-FBI-seed11"
-  },
-  {
-    "participantId": "E011EP",
-    "type": "PPS",
-    "day": "2026-09-07",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E011EP-PPS-seed12"
-  },
-  {
-    "participantId": "E011EP",
-    "type": "CFS",
-    "day": "2026-09-08",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E011EP-CFS-seed13"
-  },
-  {
-    "participantId": "E011EP",
-    "type": "FBI",
-    "day": "2026-09-06",
-    "slot": "13:30–15:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E011EP-FBI-seed14"
   },
   {
     "participantId": "E010ML",
@@ -1603,6 +1670,7 @@ const S = {
     swapTargetId: null,
     addTarget: null,
     addParticipantId: null,
+    addSlot: null,
     viewingSessionId: null,
     linkForm: { label:"", url:"", scope:"global" },
     connStatus: "connecting",
@@ -1661,7 +1729,7 @@ function LoginScreen() {
       </div>
       <form id="login-form" class="card" style="padding:22px;">
         <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#a39c8e;margin-bottom:6px;">Participant or admin ID</label>
-        <input id="login-input" class="input" placeholder="e.g. E001MG" autofocus autocomplete="off" />
+        <input id="login-input" class="input" placeholder="" autofocus autocomplete="off" />
         ${S.ui.loginError ? `<p class="error-text">⚠ ${esc(S.ui.loginError)}</p>` : ""}
         <button type="submit" class="btn-primary" style="width:100%;margin-top:14px;">Continue</button>
       </form>
@@ -1706,19 +1774,26 @@ function ParticipantView() {
               ${d.key!==p.arrivalDate && d.key!==p.departureDate ? "No sessions" : ""}
             </div>` : `
             ${(() => {
-              const mySession = items[0];
+              const nonPhenoSession = items.find(s => s.type !== "PHENO");
+              const phenoSessions = items.filter(s => s.type === "PHENO");
               const agenda = [
                 ...PRACTICE_SCHEDULE
-                  .filter(s => !mySession || !rangesOverlap(s.time, mySession.slot))
+                  .filter(s => !nonPhenoSession || !rangesOverlap(s.time, nonPhenoSession.slot))
                   .map(s => ({ start: toMinutes(s.time.split("–")[0]), html: `<div class="row ${s.kind}"><span class="time">${s.time}</span><span class="label">${s.label}</span></div>` })),
                 ...MEALS.map(m => ({ start: toMinutes(m.time.split("–")[0]), html: `<div class="row meal"><span class="time">${m.time}</span><span class="label">${esc(m.label)}</span></div>` })),
               ];
-              if (mySession) {
+              if (nonPhenoSession) {
                 agenda.push({
-                  start: toMinutes(mySession.slot.split("–")[0]),
-                  html: `<div class="row exp-${mySession.type.toLowerCase()}" style="cursor:pointer;" data-action="viewsession" data-id="${mySession.id}"><span class="time" style="font-weight:600;color:#6b6459;">${mySession.slot}</span><span class="pill pill-${mySession.type.toLowerCase()}">Expérience ${esc(EXPERIMENT_FULL_NAMES[mySession.type])}</span></div>`,
+                  start: toMinutes(nonPhenoSession.slot.split("–")[0]),
+                  html: `<div class="row exp-${nonPhenoSession.type.toLowerCase()}" style="cursor:pointer;" data-action="viewsession" data-id="${nonPhenoSession.id}"><span class="time" style="font-weight:600;color:#6b6459;">${nonPhenoSession.slot}</span><span class="pill pill-${nonPhenoSession.type.toLowerCase()}">Expérience ${esc(EXPERIMENT_FULL_NAMES[nonPhenoSession.type])}</span></div>`,
                 });
               }
+              phenoSessions.forEach(phenoSession => {
+                agenda.push({
+                  start: toMinutes(phenoSession.slot.split("–")[0]),
+                  html: `<div class="row exp-pheno" style="cursor:pointer;" data-action="viewsession" data-id="${phenoSession.id}"><span class="time" style="font-weight:600;color:#6b6459;">${phenoSession.slot}</span><span class="pill pill-pheno">Interview Pheno</span></div>`,
+                });
+              });
               agenda.sort((x,y)=>x.start-y.start);
               return agenda.map(x=>x.html).join("");
             })()}
@@ -1787,7 +1862,8 @@ function ParticipantVisualSchedule(p, mine) {
       const [start,end] = mySession.slot.split("–");
       const r1=timeToRowLine(start), r2=timeToRowLine(end);
       const c = mySession.type.toLowerCase();
-      blocks.push(`<div style="grid-column:${col};grid-row:${r1}/${r2};z-index:2;"><div class="participant-experiment ${c}" data-action="viewsession" data-id="${mySession.id}"><span class="exp-title">${mySession.type}</span><span class="exp-time">${mySession.slot}</span></div></div>`);
+      const title = mySession.type === "PHENO" ? "Pheno" : mySession.type;
+      blocks.push(`<div style="grid-column:${col};grid-row:${r1}/${r2};z-index:2;"><div class="participant-experiment ${c}" data-action="viewsession" data-id="${mySession.id}"><span class="exp-title">${title}</span><span class="exp-time">${mySession.slot}</span></div></div>`);
     });
   });
   return `
@@ -1812,9 +1888,10 @@ function AdminView() {
     <div class="tabs">
       <button class="tab-btn ${S.ui.aTab==='schedule'?'active':''}" data-action="atab" data-tab="schedule">🗓 Master schedule</button>
       <button class="tab-btn ${S.ui.aTab==='participants'?'active':''}" data-action="atab" data-tab="participants">👥 Arrival/Departure</button>
+      <button class="tab-btn ${S.ui.aTab==='summary'?'active':''}" data-action="atab" data-tab="summary">📋 Summary</button>
       <button class="tab-btn ${S.ui.aTab==='links'?'active':''}" data-action="atab" data-tab="links">🔗 Questionnaire links</button>
     </div>
-    ${S.ui.aTab==='schedule' ? MasterSchedule() : S.ui.aTab==='participants' ? ParticipantsTab() : LinksTab()}
+    ${S.ui.aTab==='schedule' ? MasterSchedule() : S.ui.aTab==='participants' ? ParticipantsTab() : S.ui.aTab==='summary' ? SummaryTab() : LinksTab()}
   </div>
   ${S.ui.editingAssignmentId ? NoteModal() : ""}
   ${S.ui.addTarget ? AddModal() : ""}
@@ -1852,6 +1929,7 @@ function currentDays() {
 function MasterSchedule() {
   if (!S.ui.activeDay) S.ui.activeDay = currentDays()[0].key;
   const days = currentDays();
+  const currentDay = S.ui.activeDay;
   return `
   <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
     <div class="week-switch">
@@ -1900,7 +1978,12 @@ function DayArrivalsView(day, opts) {
 function Timetable(day) {
   if (day === INSTALLATION_DAY) return DayArrivalsView(day, { title:"Installation — team &amp; equipment set-up day", showSteps:false });
   if (day === ARRIVAL_DAY_1) return DayArrivalsView(day, { title:"Arrivals", showSteps:true });
-  if (day === ARRIVAL_DAY_2) return DayArrivalsView(day, { title:"Arrivals", showSteps:false });
+
+  const isArrivalDay = day === ARRIVAL_DAY_2;
+  if (isArrivalDay) {
+    return TimetableWithArrivals(day);
+  }
+
   const rows = 31; // 30-min rows, 07:00 → 22:30
   const blocks = buildTimetableBlocks(day);
   const hourLabels = [];
@@ -1916,8 +1999,70 @@ function Timetable(day) {
       <div class="tt-head" style="grid-column:3;">PPS</div>
       <div class="tt-head" style="grid-column:4;">CFS</div>
       <div class="tt-head" style="grid-column:5;">FBI</div>
+      <div class="tt-head" style="grid-column:6;">Pheno</div>
       ${hourLabels.join("")}
       ${blocks.map(b=>`<div style="grid-column:${b.colStart}/${b.colEnd};grid-row:${b.r1}/${b.r2};z-index:${b.z!==undefined?b.z:1};">${b.html}</div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function TimetableWithArrivals(day) {
+  const isFirstArrivalDay = day === ARRIVAL_DAY_1;
+  const arrivals = S.participants.filter(p=>p.arrivalDate===day).sort((a,b)=>(a.arrivalTime||"zz").localeCompare(b.arrivalTime||"zz"));
+  const departures = isFirstArrivalDay ? [] : S.participants.filter(p=>p.departureDate===day).sort((a,b)=>(a.departureTime||"zz").localeCompare(b.departureTime||"zz"));
+
+  const rows = 31;
+  const blocks = buildTimetableBlocks(day, true);
+  const hourLabels = [];
+  for (let h=7; h<=22; h++) {
+    const r = timeToRowLine(`${String(h).padStart(2,"0")}:00`);
+    hourLabels.push(`<div class="tt-time" style="grid-column:1;grid-row:${r}/${r+2};">${h}:00</div>`);
+  }
+
+  const participantBlocks = [];
+  arrivals.forEach((p, idx) => {
+    if (p.arrivalTime && p.arrivalTime !== "morning" && p.arrivalTime !== "after lunch") {
+      const r = timeToRowLine(p.arrivalTime);
+      participantBlocks.push({
+        colStart: 2, colEnd: 3, r1: r, r2: r+1, z: 2,
+        html: `<div style="height:100%;background:#e6f0ee;border-left:3px solid #1f4a44;padding:4px;font-size:11px;font-weight:600;color:#173c37;">${getParticipantName(p.id)}</div>`
+      });
+    }
+  });
+
+  departures.forEach((p, idx) => {
+    if (p.departureTime && p.departureTime !== "morning" && p.departureTime !== "after lunch") {
+      const r = timeToRowLine(p.departureTime);
+      participantBlocks.push({
+        colStart: 3, colEnd: 4, r1: r, r2: r+1, z: 2,
+        html: `<div style="height:100%;background:#f7e8e2;border-left:3px solid #b5533c;padding:4px;font-size:11px;font-weight:600;color:#7a3524;">${getParticipantName(p.id)}</div>`
+      });
+    }
+  });
+
+  const allBlocks = [...blocks, ...participantBlocks];
+  const gridCols = isFirstArrivalDay ? "56px repeat(5,minmax(100px,1fr))" : "56px repeat(6,minmax(100px,1fr))";
+  const minWidth = isFirstArrivalDay ? "660px" : "760px";
+
+  return `
+  <div style="margin-bottom:16px;">
+    <p style="font-size:13px;color:#8a8478;margin:0 0 8px;"><span style="display:inline-block;width:12px;height:12px;background:#e6f0ee;border-left:3px solid #1f4a44;margin-right:6px;"></span>Arrivals${!isFirstArrivalDay ? ' <span style="display:inline-block;width:12px;height:12px;background:#f7e8e2;border-left:3px solid #b5533c;margin-left:16px;margin-right:6px;"></span>Departures' : ''}</p>
+  </div>
+  <div class="timetable-wrap">
+    <div class="timetable" style="grid-template-columns:${gridCols};grid-template-rows:34px repeat(${rows},26px);min-width:${minWidth};">
+      <div class="tt-head time-head" style="grid-column:1;"></div>
+      <div class="tt-head" style="grid-column:2;">Arrivals</div>
+      ${!isFirstArrivalDay ? '<div class="tt-head" style="grid-column:3;">Departures</div>' : ''}
+      <div class="tt-head" style="grid-column:${isFirstArrivalDay ? 3 : 4};">PPS</div>
+      <div class="tt-head" style="grid-column:${isFirstArrivalDay ? 4 : 5};">CFS</div>
+      <div class="tt-head" style="grid-column:${isFirstArrivalDay ? 5 : 6};">FBI</div>
+      <div class="tt-head" style="grid-column:${isFirstArrivalDay ? 6 : 7};">Pheno</div>
+      ${hourLabels.join("")}
+      ${allBlocks.map(b=>{
+        const colStart = isFirstArrivalDay && b.colStart > 2 ? b.colStart - 1 : b.colStart;
+        const colEnd = isFirstArrivalDay && b.colEnd > 2 ? b.colEnd - 1 : b.colEnd;
+        return `<div style="grid-column:${colStart}/${colEnd};grid-row:${b.r1}/${b.r2};z-index:${b.z!==undefined?b.z:1};">${b.html}</div>`;
+      }).join("")}
     </div>
   </div>`;
 }
@@ -1996,9 +2141,9 @@ function NoteModal() {
       <div class="modal-section">
         <p class="modal-section-title">Swap with</p>
         <select id="swap-target" class="input">
-          ${swapCandidates.map(x=>`<option value="${x.id}" ${x.id===swapTargetId?'selected':''}>${x.participantId} — ${dayShortLabel(x.day)} ${x.slot}</option>`).join("")}
+          ${swapCandidates.map(x=>`<option value="${x.id}" ${x.id===swapTargetId?'selected':''}>${getParticipantName(x.participantId)} — ${dayShortLabel(x.day)} ${x.slot}</option>`).join("")}
         </select>
-        ${target ? `<p style="font-size:12px;color:#8a8478;margin:10px 0 0;">${a.participantId} (${dayShortLabel(a.day)} ${a.slot}) ↔ ${target.participantId} (${dayShortLabel(target.day)} ${target.slot})</p>` : ""}
+        ${target ? `<p style="font-size:12px;color:#8a8478;margin:10px 0 0;">${getParticipantName(a.participantId)} (${dayShortLabel(a.day)} ${a.slot}) ↔ ${getParticipantName(target.participantId)} (${dayShortLabel(target.day)} ${target.slot})</p>` : ""}
       </div>
       <div style="display:flex;justify-content:flex-end;">
         <button class="btn-primary" data-action="doswap" data-id="${a.id}">Swap</button>
@@ -2007,7 +2152,7 @@ function NoteModal() {
     body = `
       ${backToMenu}
       <div class="modal-section">
-        <p style="font-size:13px;color:#6b6459;margin:0;">This removes <b>${a.participantId}</b> from this ${a.type} slot (${dayShortLabel(a.day)}, ${a.slot}), leaving it open for someone else.</p>
+        <p style="font-size:13px;color:#6b6459;margin:0;">This removes <b>${getParticipantName(a.participantId)}</b> from this ${a.type} slot (${dayShortLabel(a.day)}, ${a.slot}), leaving it open for someone else.</p>
       </div>
       <div style="display:flex;justify-content:flex-end;">
         <button class="btn-primary" style="background:#b5533c;" data-action="deleteassign" data-id="${a.id}">Free this slot</button>
@@ -2018,7 +2163,7 @@ function NoteModal() {
   <div class="modal-overlay" data-action="closemodal">
     <div class="modal" onclick="event.stopPropagation();">
       <div class="modal-head">
-        <h3 style="font-size:16px;font-weight:600;">${a.type} — ${a.participantId}</h3>
+        <h3 style="font-size:16px;font-weight:600;">${a.type} — ${getParticipantName(a.participantId)}</h3>
         <button class="icon-btn" data-action="closemodal">×</button>
       </div>
       ${body}
@@ -2049,7 +2194,7 @@ function AddModal() {
       <div class="modal-section">
         <label style="display:block;font-size:11px;color:#8a8478;margin-bottom:4px;">Participant</label>
         <select id="add-participant" class="input">
-          ${eligible.map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.id}</option>`).join("")}
+          ${eligible.map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${getParticipantName(p.id)}</option>`).join("")}
         </select>
       </div>
       <div style="display:flex;justify-content:flex-end;">
@@ -2079,6 +2224,47 @@ function ParticipantsTab() {
           <td><input type="text" value="${esc(p.departureTime)}" style="width:80px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="departureTime" /></td>
           <td><input type="text" value="${esc(p.departureLieu)}" style="width:130px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="departureLieu" /></td>
         </tr>`).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function SummaryTab() {
+  const phenoAssignments = S.assignments.filter(x => x.type === 'PHENO');
+  const hasPheno = phenoAssignments.length > 0;
+  return `
+  <div class="card" style="overflow-x:auto;">
+    <table class="ptable">
+      <thead><tr>
+        <th>ID</th><th>Wk</th><th>Status</th><th>PPS</th><th>CFS</th><th>FBI</th>${hasPheno ? '<th>Pheno</th>' : ''}
+      </tr></thead>
+      <tbody>
+        ${S.participants.map(p => {
+          const types = ['PPS', 'CFS', 'FBI'];
+          const assignments = types.map(type => {
+            const a = S.assignments.find(x => x.participantId === p.id && x.type === type);
+            if (!a) return { type, display: '—' };
+            const day = [...WEEK1_DAYS, ...WEEK2_DAYS].find(d => d.key === a.day);
+            const [start] = a.slot.split('–');
+            return { type, display: `${day?.short || a.day} ${start.trim()}` };
+          });
+          const complete = assignments.every(a => a.display !== '—');
+          const status = complete ? '✓ OK' : '⚠ Incomplete';
+          const statusStyle = complete ? 'color:#1f4a44;font-weight:600;' : 'color:#b5533c;font-weight:600;';
+          const phenoList = S.assignments.filter(x => x.participantId === p.id && x.type === 'PHENO');
+          const phenoDisplay = phenoList.length === 0 ? '—' : phenoList.map(a => {
+            const day = [...WEEK1_DAYS, ...WEEK2_DAYS].find(d => d.key === a.day);
+            const [start] = a.slot.split('–');
+            return `${day?.short || a.day} ${start.trim()}`;
+          }).join(', ');
+          return `<tr>
+            <td style="font-weight:600;">${getParticipantName(p.id)}</td>
+            <td style="color:#a39c8e;">${p.week}</td>
+            <td style="${statusStyle}">${status}</td>
+            ${assignments.map(a => `<td style="font-size:12px;color:#8a8478;">${a.display}</td>`).join('')}
+            ${hasPheno ? `<td style="font-size:12px;color:#8a8478;">${phenoDisplay}</td>` : ''}
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>
   </div>`;
