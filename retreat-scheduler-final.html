@@ -1467,16 +1467,6 @@ const SEED_ASSIGNMENTS = [
     "id": "E018LM-CFS-fill1001"
   },
   {
-    "participantId": "E008TO",
-    "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "09:00–10:30",
-    "note": "",
-    "week": 1,
-    "manual": true,
-    "id": "E018LM-FBI-fill1002"
-  },
-  {
     "participantId": "E003SA",
     "type": "PPS",
     "day": "2026-09-16",
@@ -1577,24 +1567,64 @@ const SEED_ASSIGNMENTS = [
     "id": "E013ML-FBI-fill1012"
   },
   {
-    "participantId": "E011EP",
+    "participantId": "E018LM",
     "type": "FBI",
     "day": "2026-09-10",
-    "slot": "17:00–18:30",
+    "slot": "09:00–10:30",
     "note": "",
     "week": 1,
-    "manual": true,
-    "id": "E021CW-FBI-fill1013"
+    "manual": false,
+    "id": "E018LM-FBI-seed75"
   },
   {
-    "participantId": "E010ML",
+    "participantId": "E021CW",
     "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "18:30–20:00",
+    "day": "2026-09-06",
+    "slot": "09:00–10:30",
     "note": "",
     "week": 1,
-    "manual": true,
-    "id": "E026FD-FBI-fill1014"
+    "manual": false,
+    "id": "E021CW-FBI-seed76"
+  },
+  {
+    "participantId": "E026FD",
+    "type": "FBI",
+    "day": "2026-09-06",
+    "slot": "10:30–12:00",
+    "note": "",
+    "week": 1,
+    "manual": false,
+    "id": "E026FD-FBI-seed77"
+  },
+  {
+    "participantId": "E045TD",
+    "type": "PPS",
+    "day": "2026-09-13",
+    "slot": "13:30–16:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E045TD-PPS-seed69"
+  },
+  {
+    "participantId": "E045TD",
+    "type": "CFS",
+    "day": "2026-09-13",
+    "slot": "09:00–12:00",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E045TD-CFS-seed70"
+  },
+  {
+    "participantId": "E045TD",
+    "type": "FBI",
+    "day": "2026-09-17",
+    "slot": "09:00–10:30",
+    "note": "",
+    "week": 2,
+    "manual": false,
+    "id": "E045TD-FBI-seed71"
   }
 ];
 
@@ -2216,12 +2246,14 @@ function NoteModal() {
 
 function AddModal() {
   const { type, day, slot } = S.ui.addTarget;
+  const isArrivalDay2 = day === "2026-09-12";
   const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
-  const eligible = S.participants.filter(p=>
-    p.week === week &&
-    !S.assignments.some(x=>x.participantId===p.id && x.type===type) &&
-    !S.assignments.some(x=>x.participantId===p.id && x.day===day)
-  );
+  const eligible = S.participants.filter(p=>{
+    const weekMatch = isArrivalDay2 ? true : (p.week === week);
+    return weekMatch &&
+      !S.assignments.some(x=>x.participantId===p.id && x.type===type) &&
+      !S.assignments.some(x=>x.participantId===p.id && x.day===day);
+  });
   const selectedId = S.ui.addParticipantId || (eligible[0] ? eligible[0].id : null);
   return `
   <div class="modal-overlay" data-action="closeaddmodal">
