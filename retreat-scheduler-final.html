@@ -133,6 +133,10 @@
   .conn-dot { width:8px; height:8px; border-radius:50%; background:#cfc9bc; }
   .conn-dot.ok { background:#1f4a44; }
   .conn-dot.err { background:#b5533c; }
+
+  .announcement-card { border:1px solid #e4e0d8; border-radius:12px; background:#fff; padding:14px 16px; margin-bottom:10px; }
+  .announcement-meta { font-size:11px; color:#a39c8e; margin-bottom:4px; }
+  .announcement-text { font-size:14px; color:#292521; white-space:pre-wrap; }
 </style>
 </head>
 <body>
@@ -267,11 +271,16 @@ function getParticipantName(id) {
   return PARTICIPANT_NAMES[id] || id;
 }
 
+const TYPE_DURATION_MIN = { PPS:180, CFS:180, FBI:120, PHENO:120 };
+
 function slotsFor(type, day) {
   const sunday = SUNDAYS.has(day);
   if (type === "FBI") {
-    const base = ["09:00–10:30","10:30–12:00","13:30–15:00","15:00–16:30","17:00–18:30","18:30–20:00"];
-    return sunday ? base.slice(2) : base;
+    // 2h sessions back-to-back, starting earlier (8:30), up to 5 per day —
+    // the only pause is the mandatory 30-min midday break. No other gaps,
+    // even if that means running into breakfast/lunch/dinner.
+    const base = ["08:30–10:30","10:30–12:30","13:00–15:00","15:00–17:00","17:00–19:00"];
+    return sunday ? base.slice(1) : base;
   }
   if (type === "PHENO") {
     const base = ["09:00–11:00","13:30–15:30","17:00–19:00"];
@@ -281,6 +290,30 @@ function slotsFor(type, day) {
   return sunday ? base.slice(1) : base;
 }
 function capFor(type){ return 1; }
+
+/* Returns the slots that should get a rendered lane in the timetable for
+   a given type/day: the default template slots, plus any custom slot
+   times that an admin has manually assigned (so manually-rescheduled or
+   longer/shorter sessions still show up even if they don't match the
+   default template). */
+function blockSlotsFor(type, day) {
+  const defaults = slotsFor(type, day);
+  const custom = S.assignments.filter(a=>a.type===type && a.day===day).map(a=>a.slot);
+  const set = new Set([...defaults, ...custom]);
+  return [...set].sort((a,b)=>toMinutes(a.split("–")[0].trim())-toMinutes(b.split("–")[0].trim()));
+}
+
+function formatTimeFromMinutes(mins) {
+  const wrapped = ((mins % (24*60)) + 24*60) % (24*60);
+  const h = Math.floor(wrapped/60), m = wrapped%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function computeSlotFromStart(type, startTime) {
+  const dur = TYPE_DURATION_MIN[type] || 90;
+  const startMin = toMinutes(startTime);
+  const endMin = startMin + dur;
+  return `${startTime}–${formatTimeFromMinutes(endMin)}`;
+}
 
 /* Timetable grid: 30-min rows from 07:00 to 22:30, header occupies grid line 1-2 */
 const TT_START_MIN = 7*60;
@@ -331,7 +364,7 @@ function buildTimetableBlocks(day, isArrivalDay) {
     });
 
     ["PPS","CFS","FBI","PHENO"].forEach(type=>{
-      const slots = slotsFor(type, day);
+      const slots = blockSlotsFor(type, day);
       slots.forEach(slot=>{
         const [start,end] = slot.split("–");
         const r1=timeToRowLine(start), r2=timeToRowLine(end);
@@ -351,7 +384,7 @@ function buildTimetableBlocks(day, isArrivalDay) {
     const isFirstArrivalDay = day === ARRIVAL_DAY_1;
     const arrivalColOffset = isFirstArrivalDay ? 0 : 1;
     ["PPS","CFS","FBI","PHENO"].forEach(type=>{
-      const slots = slotsFor(type, day);
+      const slots = blockSlotsFor(type, day);
       slots.forEach(slot=>{
         const [start,end] = slot.split("–");
         const r1=timeToRowLine(start), r2=timeToRowLine(end);
@@ -780,7 +813,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E019BT",
     "type": "FBI",
     "day": "2026-09-08",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 1,
     "manual": false,
@@ -810,7 +843,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E017MP",
     "type": "FBI",
     "day": "2026-09-08",
-    "slot": "10:30–12:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -840,7 +873,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E013ML",
     "type": "FBI",
     "day": "2026-09-08",
-    "slot": "13:30–15:00",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -869,8 +902,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E006AR",
     "type": "FBI",
-    "day": "2026-09-08",
-    "slot": "15:00–16:30",
+    "day": "2026-09-09",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -900,7 +933,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E010ML",
     "type": "FBI",
     "day": "2026-09-06",
-    "slot": "15:00–16:30",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -930,7 +963,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E005BR",
     "type": "FBI",
     "day": "2026-09-07",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 1,
     "manual": false,
@@ -959,8 +992,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E008TO",
     "type": "FBI",
-    "day": "2026-09-07",
-    "slot": "10:30–12:00",
+    "day": "2026-09-10",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 1,
     "manual": false,
@@ -989,8 +1022,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E015DD",
     "type": "FBI",
-    "day": "2026-09-07",
-    "slot": "13:30–15:00",
+    "day": "2026-09-10",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1019,8 +1052,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E014KW",
     "type": "FBI",
-    "day": "2026-09-07",
-    "slot": "15:00–16:30",
+    "day": "2026-09-10",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1050,7 +1083,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E007AH",
     "type": "FBI",
     "day": "2026-09-11",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1080,7 +1113,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E028KM",
     "type": "FBI",
     "day": "2026-09-11",
-    "slot": "10:30–12:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1170,7 +1203,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E022RG",
     "type": "FBI",
     "day": "2026-09-16",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1200,7 +1233,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E009XN",
     "type": "FBI",
     "day": "2026-09-15",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1230,7 +1263,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E004NC",
     "type": "FBI",
     "day": "2026-09-15",
-    "slot": "10:30–12:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1260,7 +1293,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E012DF",
     "type": "FBI",
     "day": "2026-09-15",
-    "slot": "13:30–15:00",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1290,7 +1323,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E044BJ",
     "type": "FBI",
     "day": "2026-09-16",
-    "slot": "10:30–12:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1320,7 +1353,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E024DH",
     "type": "FBI",
     "day": "2026-09-15",
-    "slot": "15:00–16:30",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1350,7 +1383,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E025JL",
     "type": "FBI",
     "day": "2026-09-13",
-    "slot": "13:30–15:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1380,7 +1413,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E016ED",
     "type": "FBI",
     "day": "2026-09-13",
-    "slot": "15:00–16:30",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1410,7 +1443,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E027OO",
     "type": "FBI",
     "day": "2026-09-14",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1440,7 +1473,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E002BL",
     "type": "FBI",
     "day": "2026-09-14",
-    "slot": "10:30–12:00",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1490,7 +1523,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E003SA",
     "type": "FBI",
     "day": "2026-09-14",
-    "slot": "13:30–15:00",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 2,
     "manual": true,
@@ -1519,8 +1552,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E020SF",
     "type": "FBI",
-    "day": "2026-09-14",
-    "slot": "15:00–16:30",
+    "day": "2026-09-17",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": true,
@@ -1550,7 +1583,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E023MF",
     "type": "FBI",
     "day": "2026-09-18",
-    "slot": "09:00–10:30",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 2,
     "manual": true,
@@ -1560,7 +1593,7 @@ const SEED_ASSIGNMENTS = [
     "participantId": "E001MG",
     "type": "FBI",
     "day": "2026-09-10",
-    "slot": "10:30–12:00",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": true,
@@ -1569,8 +1602,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E018LM",
     "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "09:00–10:30",
+    "day": "2026-09-06",
+    "slot": "08:30–10:30",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1579,8 +1612,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E021CW",
     "type": "FBI",
-    "day": "2026-09-06",
-    "slot": "09:00–10:30",
+    "day": "2026-09-11",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1589,8 +1622,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E026FD",
     "type": "FBI",
-    "day": "2026-09-06",
-    "slot": "10:30–12:00",
+    "day": "2026-09-07",
+    "slot": "17:00–19:00",
     "note": "",
     "week": 1,
     "manual": false,
@@ -1619,8 +1652,8 @@ const SEED_ASSIGNMENTS = [
   {
     "participantId": "E045TD",
     "type": "FBI",
-    "day": "2026-09-17",
-    "slot": "09:00–10:30",
+    "day": "2026-09-18",
+    "slot": "13:00–15:00",
     "note": "",
     "week": 2,
     "manual": false,
@@ -1692,10 +1725,10 @@ function generateSchedule(participants, week, existingAssignments) {
 /* All 18 tablets + any computer read/write the same database, so    */
 /* changes made on one device appear on every other device.          */
 /* ---------------------------------------------------------------- */
-const STORE_KEYS = ["participants","assignments","links"];
+const STORE_KEYS = ["participants","assignments","links","announcements"];
 
 async function loadState() {
-  const state = { participants: SEED_PARTICIPANTS, assignments: SEED_ASSIGNMENTS, links: [] };
+  const state = { participants: SEED_PARTICIPANTS, assignments: SEED_ASSIGNMENTS, links: [], announcements: [] };
   for (const key of STORE_KEYS) {
     try {
       const snap = await db.ref(key).get();
@@ -1730,6 +1763,7 @@ const S = {
   participants: [],
   assignments: [],
   links: [],
+  announcements: [],
   ui: {
     loginError: "",
     pTab: "schedule",
@@ -1746,6 +1780,7 @@ const S = {
     addSlot: null,
     viewingSessionId: null,
     linkForm: { label:"", url:"", scope:"global" },
+    announcementDraft: "",
     connStatus: "connecting",
   },
 };
@@ -1758,8 +1793,8 @@ function render() {
 function esc(s){ return (s??"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function toMinutes(t){ const [h,m]=t.trim().split(":").map(Number); return h*60+m; }
 function rangesOverlap(rangeA, rangeB){
-  const [a1,a2] = rangeA.split("–").map(toMinutes);
-  const [b1,b2] = rangeB.split("–").map(toMinutes);
+  const [a1,a2] = rangeA.split("–").map(s=>toMinutes(s));
+  const [b1,b2] = rangeB.split("–").map(s=>toMinutes(s));
   return a1 < b2 && b1 < a2;
 }
 
@@ -1963,8 +1998,9 @@ function AdminView() {
       <button class="tab-btn ${S.ui.aTab==='participants'?'active':''}" data-action="atab" data-tab="participants">👥 Arrival/Departure</button>
       <button class="tab-btn ${S.ui.aTab==='summary'?'active':''}" data-action="atab" data-tab="summary">📋 Summary</button>
       <button class="tab-btn ${S.ui.aTab==='links'?'active':''}" data-action="atab" data-tab="links">🔗 Questionnaire links</button>
+      <button class="tab-btn ${S.ui.aTab==='announcements'?'active':''}" data-action="atab" data-tab="announcements">📢 Annonces</button>
     </div>
-    ${S.ui.aTab==='schedule' ? MasterSchedule() : S.ui.aTab==='participants' ? ParticipantsTab() : S.ui.aTab==='summary' ? SummaryTab() : LinksTab()}
+    ${S.ui.aTab==='schedule' ? MasterSchedule() : S.ui.aTab==='participants' ? ParticipantsTab() : S.ui.aTab==='summary' ? SummaryTab() : S.ui.aTab==='links' ? LinksTab() : AnnouncementsTab()}
   </div>
   ${S.ui.editingAssignmentId ? NoteModal() : ""}
   ${S.ui.addTarget ? AddModal() : ""}
@@ -2151,10 +2187,10 @@ function NoteModal() {
   const mode = S.ui.editMode; // null = menu, "move" | "swap" | "free" = detail screen
   const team = experimentTeamFor(a);
   const room = a.room || "";
-  const draft = S.ui.editDraft || { day:a.day, slot:a.slot };
-  const isSlotFree = (day, slot) => !S.assignments.some(x=>x.id!==a.id && x.type===a.type && x.day===day && x.slot===slot);
-  const dayOptions = RETREAT_DAYS[a.week].filter(d=>slotsFor(a.type, d).some(s=>isSlotFree(d, s)));
-  const slotOptions = slotsFor(a.type, draft.day).filter(s=>isSlotFree(draft.day, s));
+  const participant = S.participants.find(p=>p.id===a.participantId);
+  const draft = S.ui.editDraft || { day:a.day, time:a.slot.split("–")[0].trim() };
+  const dayOptions = participant ? eligibleDays(participant) : RETREAT_DAYS[a.week];
+  const previewSlot = computeSlotFromStart(a.type, draft.time || a.slot.split("–")[0].trim());
 
   const swapCandidates = S.assignments.filter(x=>x.id!==a.id && x.type===a.type && x.week===a.week);
   const swapTargetId = S.ui.swapTargetId || (swapCandidates[0] ? swapCandidates[0].id : null);
@@ -2182,7 +2218,7 @@ function NoteModal() {
       ${backToRoot}
       <p class="modal-section-title" style="margin-bottom:10px;">Reschedule</p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="move">Change date</button>
+        <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="move">Change date / time</button>
         <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="swap">Swap</button>
         <button class="week-btn" style="text-align:left;padding:12px 14px;" data-action="setmode" data-mode="free">Free slot</button>
       </div>`;
@@ -2190,15 +2226,14 @@ function NoteModal() {
     body = `
       ${backToMenu}
       <div class="modal-section">
-        <p class="modal-section-title">Change date</p>
+        <p class="modal-section-title">Change date / start time</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <select id="draft-day" class="input">
             ${dayOptions.map(d=>`<option value="${d}" ${d===draft.day?'selected':''}>${dayShortLabel(d)}</option>`).join("")}
           </select>
-          <select id="draft-slot" class="input">
-            ${slotOptions.map(s=>`<option value="${esc(s)}" ${s===draft.slot?'selected':''}>${s}</option>`).join("")}
-          </select>
+          <input id="draft-time" type="time" step="900" class="input" value="${esc(draft.time)}" />
         </div>
+        <p style="font-size:12px;color:#8a8478;margin:10px 0 0;">This session lasts ${TYPE_DURATION_MIN[a.type]/60} h — it will run <b id="draft-preview">${previewSlot}</b>.</p>
       </div>
       <div style="display:flex;justify-content:space-between;">
         <button class="btn-ghost" style="color:#b5533c;" data-action="deleteassign" data-id="${a.id}">Remove</button>
@@ -2251,8 +2286,7 @@ function AddModal() {
   const eligible = S.participants.filter(p=>{
     const weekMatch = isArrivalDay2 ? true : (p.week === week);
     return weekMatch &&
-      !S.assignments.some(x=>x.participantId===p.id && x.type===type) &&
-      !S.assignments.some(x=>x.participantId===p.id && x.day===day);
+      !S.assignments.some(x=>x.participantId===p.id && x.type===type);
   });
   const selectedId = S.ui.addParticipantId || (eligible[0] ? eligible[0].id : null);
   return `
@@ -2263,7 +2297,7 @@ function AddModal() {
         <button class="icon-btn" data-action="closeaddmodal">×</button>
       </div>
       ${eligible.length === 0
-        ? `<p style="font-size:13px;color:#a39c8e;">No eligible participant for this slot — everyone this week is either already assigned to ${type}, or already has another session that day.</p>
+        ? `<p style="font-size:13px;color:#a39c8e;">No eligible participant for this slot — everyone this week is already assigned to ${type}.</p>
            <div style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="btn-ghost" data-action="closeaddmodal">Close</button></div>`
         : `
       <div class="modal-section">
@@ -2369,6 +2403,33 @@ function LinksTab() {
   </div>`;
 }
 
+function formatAnnouncementDate(ts) {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString("fr-FR", { weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+  } catch(e) { return ""; }
+}
+
+function AnnouncementsTab() {
+  const sorted = [...S.announcements].sort((a,b)=>b.ts-a.ts);
+  return `
+  <div class="card" style="padding:16px;margin-bottom:16px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;">Post an announcement</h3>
+    <textarea id="announcement-input" rows="3" class="input" style="resize:vertical;" placeholder="e.g. Room B is now available for FBI sessions, dinner moved to 19:00 tonight…">${esc(S.ui.announcementDraft)}</textarea>
+    <button class="btn-primary" style="margin-top:10px;" data-action="addannouncement">+ Post announcement</button>
+  </div>
+  <div>
+    ${sorted.length===0 ? `<p style="color:#a39c8e;font-size:14px;">No announcements yet.</p>` : ""}
+    ${sorted.map(a=>`<div class="announcement-card">
+      <div class="announcement-meta" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${formatAnnouncementDate(a.ts)}${a.author ? ` · ${esc(a.author)}` : ""}</span>
+        <button class="icon-btn" data-action="removeannouncement" data-id="${a.id}">🗑</button>
+      </div>
+      <div class="announcement-text">${esc(a.text)}</div>
+    </div>`).join("")}
+  </div>`;
+}
+
 /* ---------------------------------------------------------------- */
 /* Event wiring                                                      */
 /* ---------------------------------------------------------------- */
@@ -2400,7 +2461,7 @@ function attachEvents() {
       if (el._justDragged) { el._justDragged=false; return; }
       const a = S.assignments.find(x=>x.id===el.dataset.id);
       S.ui.editingAssignmentId = el.dataset.id;
-      S.ui.editDraft = a ? { day:a.day, slot:a.slot } : null;
+      S.ui.editDraft = a ? { day:a.day, time:a.slot.split("–")[0].trim() } : null;
       S.ui.editMode = null;
       S.ui.swapTargetId = null;
       render();
@@ -2417,16 +2478,16 @@ function attachEvents() {
 
   const daySelect = document.getElementById("draft-day");
   if (daySelect) daySelect.addEventListener("change", ()=>{
-    const a = S.assignments.find(x=>x.id===S.ui.editingAssignmentId);
-    const newDay = daySelect.value;
-    const isFree = (slot) => !S.assignments.some(x=>x.id!==a.id && x.type===a.type && x.day===newDay && x.slot===slot);
-    const firstSlot = slotsFor(a.type, newDay).find(isFree) || "";
-    S.ui.editDraft = { day:newDay, slot:firstSlot };
+    S.ui.editDraft.day = daySelect.value;
     render();
   });
-  const slotSelect = document.getElementById("draft-slot");
-  if (slotSelect) slotSelect.addEventListener("change", ()=>{
-    S.ui.editDraft.slot = slotSelect.value;
+  const timeInput = document.getElementById("draft-time");
+  if (timeInput) timeInput.addEventListener("input", ()=>{
+    if (!timeInput.value) return;
+    S.ui.editDraft.time = timeInput.value;
+    const a = S.assignments.find(x=>x.id===S.ui.editingAssignmentId);
+    const preview = document.getElementById("draft-preview");
+    if (a && preview) preview.textContent = computeSlotFromStart(a.type, timeInput.value);
   });
   const swapSelect = document.getElementById("swap-target");
   if (swapSelect) swapSelect.addEventListener("change", ()=>{
@@ -2439,9 +2500,10 @@ function attachEvents() {
     const target = S.assignments.find(x=>x.id===S.ui.swapTargetId);
     if (!a || !target) return;
     const conflictA = S.assignments.some(x=>x.id!==a.id && x.id!==target.id && x.participantId===a.participantId && x.day===target.day);
-    if (conflictA) { alert(a.participantId+" already has another session on "+dayShortLabel(target.day)+"."); return; }
     const conflictB = S.assignments.some(x=>x.id!==a.id && x.id!==target.id && x.participantId===target.participantId && x.day===a.day);
-    if (conflictB) { alert(target.participantId+" already has another session on "+dayShortLabel(a.day)+"."); return; }
+    if (conflictA || conflictB) {
+      alert("Warning: this participant already has an experience that day.");
+    }
     const next = S.assignments.map(x=>{
       if (x.id===a.id) return {...x, day:target.day, slot:target.slot, manual:true};
       if (x.id===target.id) return {...x, day:a.day, slot:a.slot, manual:true};
@@ -2461,12 +2523,19 @@ function attachEvents() {
     const note = noteEl ? noteEl.value : a.note;
     const team = teamEl ? teamEl.value : (a.team !== undefined ? a.team : EXPERIMENT_TEAMS[a.type]);
     const room = roomEl ? roomEl.value : (a.room || "");
-    const { day, slot } = S.ui.editDraft;
-    if (day !== a.day || slot !== a.slot) {
-      const occupying = S.assignments.find(x=>x.id!==a.id && x.type===a.type && x.day===day && x.slot===slot);
-      if (occupying) { alert("This slot is already taken by "+occupying.participantId+"."); return; }
-      const conflict = S.assignments.find(x=>x.id!==a.id && x.participantId===a.participantId && x.day===day);
-      if (conflict) { alert("This participant already has a session that day."); return; }
+
+    let day = a.day, slot = a.slot;
+    if (S.ui.editDraft && (document.getElementById("draft-day") || document.getElementById("draft-time"))) {
+      const newDay = S.ui.editDraft.day;
+      const newTime = S.ui.editDraft.time;
+      const newSlot = computeSlotFromStart(a.type, newTime);
+      if (newDay !== a.day || newSlot !== a.slot) {
+        const occupying = S.assignments.find(x=>x.id!==a.id && x.type===a.type && x.day===newDay && rangesOverlap(x.slot, newSlot));
+        if (occupying) { alert("This time overlaps an existing "+a.type+" session ("+getParticipantName(occupying.participantId)+", "+occupying.slot+")."); return; }
+        const conflict = S.assignments.find(x=>x.id!==a.id && x.participantId===a.participantId && x.day===newDay);
+        if (conflict) { alert("Warning: this participant already has an experience that day."); }
+        day = newDay; slot = newSlot;
+      }
     }
     const next = S.assignments.map(x=>x.id===el.dataset.id ? {...x, note, team, room, day, slot, manual:true} : x);
     S.ui.editingAssignmentId = null;
@@ -2498,8 +2567,10 @@ function attachEvents() {
     const participantId = sel ? sel.value : S.ui.addParticipantId;
     const { type, day, slot } = S.ui.addTarget;
     if (!participantId) return;
-    const occupying = S.assignments.find(x=>x.type===type && x.day===day && x.slot===slot);
+    const occupying = S.assignments.find(x=>x.type===type && x.day===day && rangesOverlap(x.slot, slot));
     if (occupying) { alert("This slot is already taken by "+occupying.participantId+"."); return; }
+    const dayConflict = S.assignments.some(x=>x.participantId===participantId && x.day===day);
+    if (dayConflict) { alert("Warning: this participant already has an experience that day."); }
     const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
     const next = [...S.assignments, {
       id: participantId+"-"+type+"-"+Date.now(),
@@ -2528,11 +2599,10 @@ function attachEvents() {
       if (!moved) { render(); return; }
       const target = { type: el.dataset.type, day: el.dataset.day, slot: el.dataset.slot };
       if (moved.type !== target.type) { render(); return; }
-      const capacity = capFor(target.type);
-      const occupying = S.assignments.filter(a=>a.id!==moved.id && a.type===target.type && a.day===target.day && a.slot===target.slot);
-      if (occupying.length >= capacity) { alert("This slot is already full."); render(); return; }
+      const occupying = S.assignments.filter(a=>a.id!==moved.id && a.type===target.type && a.day===target.day && rangesOverlap(a.slot, target.slot));
+      if (occupying.length >= capFor(target.type)) { alert("This slot is already full."); render(); return; }
       const conflict = S.assignments.find(a=>a.id!==moved.id && a.participantId===moved.participantId && a.day===target.day);
-      if (conflict) { alert("This participant already has a session that day."); render(); return; }
+      if (conflict) { alert("Warning: this participant already has an experience that day."); }
       const next = S.assignments.map(a=>a.id===moved.id ? {...a, day:target.day, slot:target.slot, manual:true} : a);
       persist("assignments", next);
     });
@@ -2560,6 +2630,21 @@ function attachEvents() {
   document.querySelectorAll('[data-action="removelink"]').forEach(el=>el.onclick=()=>{
     persist("links", S.links.filter(l=>l.id!==el.dataset.id));
   });
+
+  // announcements tab
+  const announcementInput = document.getElementById("announcement-input");
+  if (announcementInput) announcementInput.addEventListener("input", ()=>{ S.ui.announcementDraft = announcementInput.value; });
+  const addAnnouncementBtn = document.querySelector('[data-action="addannouncement"]');
+  if (addAnnouncementBtn) addAnnouncementBtn.onclick = ()=>{
+    const text = (announcementInput ? announcementInput.value : S.ui.announcementDraft).trim();
+    if (!text) return;
+    const next = [...S.announcements, { id:"ann-"+Date.now(), text, ts:Date.now() }];
+    S.ui.announcementDraft = "";
+    persist("announcements", next);
+  };
+  document.querySelectorAll('[data-action="removeannouncement"]').forEach(el=>el.onclick=()=>{
+    persist("announcements", S.announcements.filter(a=>a.id!==el.dataset.id));
+  });
 }
 
 /* ---------------------------------------------------------------- */
@@ -2570,6 +2655,7 @@ function attachEvents() {
   S.participants = state.participants;
   S.assignments = state.assignments;
   S.links = state.links;
+  S.announcements = state.announcements || [];
   S.ready = true;
   setConnStatus("ok");
   render();
