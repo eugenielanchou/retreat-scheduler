@@ -1781,6 +1781,7 @@ const S = {
     viewingSessionId: null,
     linkForm: { label:"", url:"", scope:"global" },
     announcementDraft: "",
+    announcementAudience: "admin",
     connStatus: "connecting",
   },
 };
@@ -1863,8 +1864,20 @@ function ParticipantView() {
       <button class="tab-btn ${S.ui.pTab==='schedule'?'active':''}" data-action="ptab" data-tab="schedule">Day-by-day Schedule</button>
       <button class="tab-btn ${S.ui.pTab==='visual'?'active':''}" data-action="ptab" data-tab="visual">Weekly overview</button>
       <button class="tab-btn ${S.ui.pTab==='questionnaires'?'active':''}" data-action="ptab" data-tab="questionnaires">Questionnaires</button>
+      <button class="tab-btn ${S.ui.pTab==='announcements'?'active':''}" data-action="ptab" data-tab="announcements">📢 Annonces</button>
     </div>
-    ${S.ui.pTab==='schedule' ? `
+    ${S.ui.pTab==='announcements' ? `
+      <div>
+        ${(() => {
+          const publicAnnouncements = [...S.announcements].filter(a=>a.audience==='all').sort((a,b)=>b.ts-a.ts);
+          if (publicAnnouncements.length===0) return `<p style="color:#a39c8e;font-size:14px;">No announcements yet.</p>`;
+          return publicAnnouncements.map(a=>`<div class="announcement-card">
+            <div class="announcement-meta"><span>${formatAnnouncementDate(a.ts)}</span></div>
+            <div class="announcement-text">${esc(a.text)}</div>
+          </div>`).join("");
+        })()}
+      </div>
+    ` : S.ui.pTab==='schedule' ? `
       ${p.status==='tbd' ? `<div class="warn-banner">⚠ Your arrival/departure info is still pending — contact the team if needed.</div>` : ""}
       ${days.map(d => {
         const isSat = d.weekday==='Sat';
@@ -2416,13 +2429,17 @@ function AnnouncementsTab() {
   <div class="card" style="padding:16px;margin-bottom:16px;">
     <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;">Post an announcement</h3>
     <textarea id="announcement-input" rows="3" class="input" style="resize:vertical;" placeholder="e.g. Room B is now available for FBI sessions, dinner moved to 19:00 tonight…">${esc(S.ui.announcementDraft)}</textarea>
-    <button class="btn-primary" style="margin-top:10px;" data-action="addannouncement">+ Post announcement</button>
+    <select class="input" id="announcement-audience" style="margin-top:10px;max-width:280px;">
+      <option value="admin" ${S.ui.announcementAudience==='admin'?'selected':''}>Admin only</option>
+      <option value="all" ${S.ui.announcementAudience==='all'?'selected':''}>Everyone (Admin + Participants)</option>
+    </select>
+    <br/><button class="btn-primary" style="margin-top:10px;" data-action="addannouncement">+ Post announcement</button>
   </div>
   <div>
     ${sorted.length===0 ? `<p style="color:#a39c8e;font-size:14px;">No announcements yet.</p>` : ""}
     ${sorted.map(a=>`<div class="announcement-card">
       <div class="announcement-meta" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>${formatAnnouncementDate(a.ts)}${a.author ? ` · ${esc(a.author)}` : ""}</span>
+        <span>${formatAnnouncementDate(a.ts)}${a.author ? ` · ${esc(a.author)}` : ""} · ${a.audience==='all' ? '🌍 Everyone' : '🔒 Admin only'}</span>
         <button class="icon-btn" data-action="removeannouncement" data-id="${a.id}">🗑</button>
       </div>
       <div class="announcement-text">${esc(a.text)}</div>
@@ -2634,11 +2651,14 @@ function attachEvents() {
   // announcements tab
   const announcementInput = document.getElementById("announcement-input");
   if (announcementInput) announcementInput.addEventListener("input", ()=>{ S.ui.announcementDraft = announcementInput.value; });
+  const announcementAudienceSelect = document.getElementById("announcement-audience");
+  if (announcementAudienceSelect) announcementAudienceSelect.addEventListener("change", ()=>{ S.ui.announcementAudience = announcementAudienceSelect.value; });
   const addAnnouncementBtn = document.querySelector('[data-action="addannouncement"]');
   if (addAnnouncementBtn) addAnnouncementBtn.onclick = ()=>{
     const text = (announcementInput ? announcementInput.value : S.ui.announcementDraft).trim();
     if (!text) return;
-    const next = [...S.announcements, { id:"ann-"+Date.now(), text, ts:Date.now() }];
+    const audience = announcementAudienceSelect ? announcementAudienceSelect.value : S.ui.announcementAudience;
+    const next = [...S.announcements, { id:"ann-"+Date.now(), text, audience, ts:Date.now() }];
     S.ui.announcementDraft = "";
     persist("announcements", next);
   };
