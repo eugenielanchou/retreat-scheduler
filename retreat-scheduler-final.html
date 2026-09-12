@@ -408,201 +408,6 @@ function buildTimetableBlocks(day, isArrivalDay) {
 /* ---------------------------------------------------------------- */
 const SEED_PARTICIPANTS = [
   {
-    "id": "E001MG",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 4:57 pm",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "16:57",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 10:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "10:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E006AR",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 12:00 pm",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "12:00",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 11:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "11:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E010ML",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 1:40 pm",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "13:40",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 10:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "10:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E005BR",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – morning",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "morning",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – after lunch",
-    "departureDate": "2026-09-12",
-    "departureTime": "after lunch",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E008TO",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 7:00–8:00 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "19:00–20:00",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 10:00–11:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "10:00–11:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E018LM",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 4:46 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "16:46",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Awaiting information",
-    "departureDate": "",
-    "departureTime": "",
-    "departureLieu": "",
-    "status": "tbd"
-  },
-  {
-    "id": "E015DD",
-    "week": 1,
-    "arrivalRaw": "Sun 6 Sept – 1:20 pm",
-    "arrivalDate": "2026-09-06",
-    "arrivalTime": "13:20",
-    "arrivalLieu": "Lyon–Saint Exupéry Airport",
-    "departureRaw": "Sat 12 Sept – with Christian to Lyon airport",
-    "departureDate": "2026-09-12",
-    "departureTime": "",
-    "departureLieu": "With Christian to Lyon–Saint Exupéry Airport",
-    "status": "confirmed"
-  },
-  {
-    "id": "E014KW",
-    "week": 1,
-    "arrivalRaw": "Sun 6 Sept – 1:20 pm",
-    "arrivalDate": "2026-09-06",
-    "arrivalTime": "13:20",
-    "arrivalLieu": "Lyon–Saint Exupéry Airport",
-    "departureRaw": "Sat 12 Sept – with Christian to Lyon airport",
-    "departureDate": "2026-09-12",
-    "departureTime": "",
-    "departureLieu": "With Christian to Lyon–Saint Exupéry Airport",
-    "status": "confirmed"
-  },
-  {
-    "id": "E007AH",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 4:00 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "16:00",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 9:00 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "09:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E019BT",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 4:45 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "16:45",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Thu 10 Sept – 7:58 am",
-    "departureDate": "2026-09-10",
-    "departureTime": "07:58",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E017MP",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 4:45 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "16:45",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Thu 10 Sept – 7:58 am",
-    "departureDate": "2026-09-10",
-    "departureTime": "07:58",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E021CW",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 4:00 pm by car",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "16:00",
-    "arrivalLieu": "By car",
-    "departureRaw": "Sat 12 Sept – takes the lamas to Lyon airport",
-    "departureDate": "2026-09-12",
-    "departureTime": "",
-    "departureLieu": "By car — takes the lamas to Lyon–Saint Exupéry Airport",
-    "status": "confirmed"
-  },
-  {
-    "id": "E028KM",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 12:04 pm",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "12:04",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 4:00 pm",
-    "departureDate": "2026-09-12",
-    "departureTime": "16:00",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
-    "id": "E013ML",
-    "week": 1,
-    "arrivalRaw": "Sat 5 Sept – 12:26 pm by train",
-    "arrivalDate": "2026-09-05",
-    "arrivalTime": "12:26",
-    "arrivalLieu": "Bellegarde Station (by train)",
-    "departureRaw": "Sat 12 Sept – 9:33 am by train",
-    "departureDate": "2026-09-12",
-    "departureTime": "09:33",
-    "departureLieu": "Bellegarde Station (by train)",
-    "status": "confirmed"
-  },
-  {
-    "id": "E026FD",
-    "week": 1,
-    "arrivalRaw": "Fri 4 Sept – 7:32 pm",
-    "arrivalDate": "2026-09-04",
-    "arrivalTime": "19:32",
-    "arrivalLieu": "Bellegarde Station",
-    "departureRaw": "Sat 12 Sept – 5:55 am",
-    "departureDate": "2026-09-12",
-    "departureTime": "05:55",
-    "departureLieu": "Bellegarde Station",
-    "status": "confirmed"
-  },
-  {
     "id": "E009XN",
     "week": 2,
     "arrivalRaw": "Sat 12 Sept – 4:59 pm",
@@ -788,396 +593,6 @@ const SEED_PARTICIPANTS = [
 const ALL_IDS = SEED_PARTICIPANTS.map(p=>p.id);
 
 const SEED_ASSIGNMENTS = [
-  {
-    "participantId": "E019BT",
-    "type": "PPS",
-    "day": "2026-09-06",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E019BT-PPS-seed0"
-  },
-  {
-    "participantId": "E019BT",
-    "type": "CFS",
-    "day": "2026-09-07",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E019BT-CFS-seed1"
-  },
-  {
-    "participantId": "E019BT",
-    "type": "FBI",
-    "day": "2026-09-08",
-    "slot": "08:30–10:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E019BT-FBI-seed2"
-  },
-  {
-    "participantId": "E017MP",
-    "type": "PPS",
-    "day": "2026-09-06",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E017MP-PPS-seed3"
-  },
-  {
-    "participantId": "E017MP",
-    "type": "CFS",
-    "day": "2026-09-07",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E017MP-CFS-seed4"
-  },
-  {
-    "participantId": "E017MP",
-    "type": "FBI",
-    "day": "2026-09-08",
-    "slot": "13:00–15:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E017MP-FBI-seed5"
-  },
-  {
-    "participantId": "E001MG",
-    "type": "PPS",
-    "day": "2026-09-07",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E001MG-PPS-seed6"
-  },
-  {
-    "participantId": "E001MG",
-    "type": "CFS",
-    "day": "2026-09-06",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E001MG-CFS-seed7"
-  },
-  {
-    "participantId": "E013ML",
-    "type": "FBI",
-    "day": "2026-09-08",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E001MG-FBI-seed8"
-  },
-  {
-    "participantId": "E006AR",
-    "type": "PPS",
-    "day": "2026-09-07",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E006AR-PPS-seed9"
-  },
-  {
-    "participantId": "E006AR",
-    "type": "CFS",
-    "day": "2026-09-06",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E006AR-CFS-seed10"
-  },
-  {
-    "participantId": "E006AR",
-    "type": "FBI",
-    "day": "2026-09-09",
-    "slot": "13:00–15:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E006AR-FBI-seed11"
-  },
-  {
-    "participantId": "E010ML",
-    "type": "PPS",
-    "day": "2026-09-08",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E010ML-PPS-seed15"
-  },
-  {
-    "participantId": "E010ML",
-    "type": "CFS",
-    "day": "2026-09-07",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E010ML-CFS-seed16"
-  },
-  {
-    "participantId": "E010ML",
-    "type": "FBI",
-    "day": "2026-09-06",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E010ML-FBI-seed17"
-  },
-  {
-    "participantId": "E005BR",
-    "type": "PPS",
-    "day": "2026-09-08",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E005BR-PPS-seed18"
-  },
-  {
-    "participantId": "E005BR",
-    "type": "CFS",
-    "day": "2026-09-09",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E005BR-CFS-seed19"
-  },
-  {
-    "participantId": "E005BR",
-    "type": "FBI",
-    "day": "2026-09-07",
-    "slot": "08:30–10:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E005BR-FBI-seed20"
-  },
-  {
-    "participantId": "E008TO",
-    "type": "PPS",
-    "day": "2026-09-08",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E008TO-PPS-seed21"
-  },
-  {
-    "participantId": "E008TO",
-    "type": "CFS",
-    "day": "2026-09-09",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E008TO-CFS-seed22"
-  },
-  {
-    "participantId": "E008TO",
-    "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "08:30–10:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E008TO-FBI-seed23"
-  },
-  {
-    "participantId": "E015DD",
-    "type": "PPS",
-    "day": "2026-09-09",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E015DD-PPS-seed24"
-  },
-  {
-    "participantId": "E015DD",
-    "type": "CFS",
-    "day": "2026-09-08",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E015DD-CFS-seed25"
-  },
-  {
-    "participantId": "E015DD",
-    "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "13:00–15:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E015DD-FBI-seed26"
-  },
-  {
-    "participantId": "E014KW",
-    "type": "PPS",
-    "day": "2026-09-09",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E014KW-PPS-seed27"
-  },
-  {
-    "participantId": "E014KW",
-    "type": "CFS",
-    "day": "2026-09-08",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E014KW-CFS-seed28"
-  },
-  {
-    "participantId": "E014KW",
-    "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E014KW-FBI-seed29"
-  },
-  {
-    "participantId": "E007AH",
-    "type": "PPS",
-    "day": "2026-09-09",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E007AH-PPS-seed30"
-  },
-  {
-    "participantId": "E007AH",
-    "type": "CFS",
-    "day": "2026-09-10",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E007AH-CFS-seed31"
-  },
-  {
-    "participantId": "E007AH",
-    "type": "FBI",
-    "day": "2026-09-11",
-    "slot": "08:30–10:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E007AH-FBI-seed32"
-  },
-  {
-    "participantId": "E028KM",
-    "type": "PPS",
-    "day": "2026-09-10",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E028KM-PPS-seed33"
-  },
-  {
-    "participantId": "E028KM",
-    "type": "CFS",
-    "day": "2026-09-09",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E028KM-CFS-seed34"
-  },
-  {
-    "participantId": "E028KM",
-    "type": "FBI",
-    "day": "2026-09-11",
-    "slot": "13:00–15:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E028KM-FBI-seed35"
-  },
-  {
-    "participantId": "E021CW",
-    "type": "PPS",
-    "day": "2026-09-10",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E021CW-PPS-seed36"
-  },
-  {
-    "participantId": "E021CW",
-    "type": "CFS",
-    "day": "2026-09-11",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E021CW-CFS-seed37"
-  },
-  {
-    "participantId": "E013ML",
-    "type": "PPS",
-    "day": "2026-09-10",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E013ML-PPS-seed38"
-  },
-  {
-    "participantId": "E013ML",
-    "type": "CFS",
-    "day": "2026-09-11",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E013ML-CFS-seed39"
-  },
-  {
-    "participantId": "E026FD",
-    "type": "PPS",
-    "day": "2026-09-11",
-    "slot": "09:00–12:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E026FD-PPS-seed40"
-  },
-  {
-    "participantId": "E026FD",
-    "type": "CFS",
-    "day": "2026-09-10",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E026FD-CFS-seed41"
-  },
   {
     "participantId": "E022RG",
     "type": "PPS",
@@ -1479,26 +894,6 @@ const SEED_ASSIGNMENTS = [
     "id": "E002BL-FBI-seed68"
   },
   {
-    "participantId": "E018LM",
-    "type": "PPS",
-    "day": "2026-09-11",
-    "slot": "13:30–16:30",
-    "note": "",
-    "week": 1,
-    "manual": true,
-    "id": "E018LM-PPS-fill1000"
-  },
-  {
-    "participantId": "E018LM",
-    "type": "CFS",
-    "day": "2026-09-10",
-    "slot": "17:00–20:00",
-    "note": "",
-    "week": 1,
-    "manual": true,
-    "id": "E018LM-CFS-fill1001"
-  },
-  {
     "participantId": "E003SA",
     "type": "PPS",
     "day": "2026-09-16",
@@ -1587,46 +982,6 @@ const SEED_ASSIGNMENTS = [
     "week": 2,
     "manual": true,
     "id": "E023MF-FBI-fill1011"
-  },
-  {
-    "participantId": "E001MG",
-    "type": "FBI",
-    "day": "2026-09-10",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": true,
-    "id": "E013ML-FBI-fill1012"
-  },
-  {
-    "participantId": "E018LM",
-    "type": "FBI",
-    "day": "2026-09-06",
-    "slot": "08:30–10:30",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E018LM-FBI-seed75"
-  },
-  {
-    "participantId": "E021CW",
-    "type": "FBI",
-    "day": "2026-09-11",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E021CW-FBI-seed76"
-  },
-  {
-    "participantId": "E026FD",
-    "type": "FBI",
-    "day": "2026-09-07",
-    "slot": "17:00–19:00",
-    "note": "",
-    "week": 1,
-    "manual": false,
-    "id": "E026FD-FBI-seed77"
   },
   {
     "participantId": "E045TD",
@@ -1854,7 +1209,7 @@ function ParticipantView() {
 
   return `
   <header class="topbar"><div class="topbar-inner">
-    <div><p class="eyebrow">Participant</p><h1 class="page-title">${p.id} · Week ${p.week}</h1></div>
+    <div><p class="eyebrow">Participant</p><h1 class="page-title">${getParticipantName(p.id)} · Week ${p.week}</h1></div>
     <button class="btn-ghost" data-action="logout">⏻ Log out</button>
   </div></header>
   <div class="content">
@@ -2067,7 +1422,7 @@ function DayArrivalsView(day, opts) {
   const steps = ["Arrival", "Participant installation", "Inclusion / Consent signing", "Questionnaire"];
   const personRow = (p, timeField, locationField) => `
     <div class="row" style="justify-content:space-between;gap:16px;">
-      <span style="font-family:monospace;font-weight:600;">${p.id}</span>
+      <span style="font-weight:600;">${getParticipantName(p.id)}</span>
       <span style="color:#8a8478;text-align:right;">${esc(p[timeField])||'—'}${p[locationField]?` · ${esc(p[locationField])}`:''}</span>
     </div>`;
   return `
@@ -2321,13 +1676,13 @@ function ParticipantsTab() {
   <div class="card" style="overflow-x:auto;">
     <table class="ptable">
       <thead><tr>
-        <th>ID</th><th>Wk</th>
+        <th>Name</th><th>Wk</th>
         <th>Arrival date</th><th>Arrival time</th><th>Arrival location</th>
         <th>Departure date</th><th>Departure time</th><th>Departure location</th>
       </tr></thead>
       <tbody>
         ${S.participants.map(p=>`<tr>
-          <td style="font-family:monospace;font-weight:600;">${p.id}</td>
+          <td style="font-weight:600;">${getParticipantName(p.id)}</td>
           <td style="color:#a39c8e;">${p.week}</td>
           <td><input type="date" value="${p.arrivalDate}" style="${p.arrivalDate?'':'background:#fbf1de;border-color:#e8cf9e;'}" data-action="editp" data-id="${p.id}" data-field="arrivalDate" /></td>
           <td><input type="text" value="${esc(p.arrivalTime)}" style="width:80px;" placeholder="—" data-action="editp" data-id="${p.id}" data-field="arrivalTime" /></td>
@@ -2348,7 +1703,7 @@ function SummaryTab() {
   <div class="card" style="overflow-x:auto;">
     <table class="ptable">
       <thead><tr>
-        <th>ID</th><th>Wk</th><th>Status</th><th>PPS</th><th>CFS</th><th>FBI</th>${hasPheno ? '<th>Pheno</th>' : ''}
+        <th>Name</th><th>Wk</th><th>Status</th><th>PPS</th><th>CFS</th><th>FBI</th>${hasPheno ? '<th>Pheno</th>' : ''}
       </tr></thead>
       <tbody>
         ${S.participants.map(p => {
@@ -2392,7 +1747,7 @@ function LinksTab() {
       <input class="input" id="link-url" placeholder="LimeSurvey URL" value="${esc(f.url)}" />
       <select class="input" id="link-scope">
         <option value="global" ${f.scope==='global'?'selected':''}>All participants</option>
-        ${S.participants.map(p=>`<option value="${p.id}" ${f.scope===p.id?'selected':''}>${p.id} only</option>`).join("")}
+        ${S.participants.map(p=>`<option value="${p.id}" ${f.scope===p.id?'selected':''}>${getParticipantName(p.id)} only</option>`).join("")}
       </select>
     </div>
     <button class="btn-primary" style="margin-top:10px;" data-action="addlink">+ Add link</button>
@@ -2400,7 +1755,7 @@ function LinksTab() {
   <div class="card">
     ${S.links.length===0 ? `<p style="padding:16px;color:#cfc9bc;font-size:14px;">No links yet.</p>` : ""}
     ${S.links.map(l=>`<div class="row" style="justify-content:space-between;">
-      <div><p style="font-weight:600;margin:0;">${esc(l.label)}</p><p style="font-size:12px;color:#a39c8e;margin:2px 0 0;">${l.scope==='global'?'All participants':esc(l.scope)} · ${esc(l.url)}</p></div>
+      <div><p style="font-weight:600;margin:0;">${esc(l.label)}</p><p style="font-size:12px;color:#a39c8e;margin:2px 0 0;">${l.scope==='global'?'All participants':getParticipantName(l.scope)} · ${esc(l.url)}</p></div>
       <button class="icon-btn" data-action="removelink" data-id="${l.id}">🗑</button>
     </div>`).join("")}
   </div>`;
@@ -2574,7 +1929,7 @@ function attachEvents() {
     const { type, day, slot } = S.ui.addTarget;
     if (!participantId) return;
     const occupying = S.assignments.find(x=>x.type===type && x.day===day && rangesOverlap(x.slot, slot));
-    if (occupying) { alert("This slot is already taken by "+occupying.participantId+"."); return; }
+    if (occupying) { alert("This slot is already taken by "+getParticipantName(occupying.participantId)+"."); return; }
     const dayConflict = S.assignments.some(x=>x.participantId===participantId && x.day===day);
     if (dayConflict) { alert("Warning: this participant already has an experience that day."); }
     const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
