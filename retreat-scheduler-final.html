@@ -59,7 +59,6 @@
   .links-list a.link-item { display:flex; align-items:center; justify-content:space-between; border:1px solid #e4e0d8; border-radius:12px; background:#fff; padding:16px; margin-bottom:10px; }
   .links-list a.link-item:hover { border-color:#9fc4bc; background:#f3f8f6; }
 
-  .week-switch { display:flex; gap:8px; }
   .week-btn { padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; background:#fff; border:1px solid #e4e0d8; color:#6b6459; }
   .week-btn.active { background:#1f4a44; color:#fff; border-color:#1f4a44; }
 
@@ -208,8 +207,8 @@ const PRACTICE_SCHEDULE = [
 ];
 const MEALS = [
   { time:"08:00–09:00", label:"Breakfast" },
-  { time:"12:00–13:30", label:"Lunch" },
-  { time:"18:30–20:00", label:"Dinner" },
+  { time:"12:30–13:30", label:"Lunch" },
+  { time:"19:00–20:00", label:"Dinner" },
 ];
 
 const EXPERIMENT_TEAMS = {
@@ -1768,7 +1767,6 @@ const S = {
     loginError: "",
     pTab: "schedule",
     aTab: "schedule",
-    week: 1,
     activeDay: null,
     dragOverKey: null,
     editingAssignmentId: null,
@@ -2043,9 +2041,7 @@ const TEAM_ARRIVALS = {
 };
 
 function currentDays() {
-  const days = S.ui.week===1 ? WEEK1_DAYS : WEEK2_DAYS;
-  const arrivalDay = S.ui.week===1 ? ARRIVAL_DAY_1 : ARRIVAL_DAY_2;
-  return days.filter(d=>d.weekday!=="Sat" || d.key===arrivalDay);
+  return WEEK2_DAYS.filter(d=>d.weekday!=="Sat" || d.key===ARRIVAL_DAY_2);
 }
 
 function MasterSchedule() {
@@ -2053,12 +2049,6 @@ function MasterSchedule() {
   const days = currentDays();
   const currentDay = S.ui.activeDay;
   return `
-  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
-    <div class="week-switch">
-      <button class="week-btn ${S.ui.week===1?'active':''}" data-action="setweek" data-week="1">Week 1</button>
-      <button class="week-btn ${S.ui.week===2?'active':''}" data-action="setweek" data-week="2">Week 2</button>
-    </div>
-  </div>
   <div class="day-strip">
     ${days.map(d=>`<button class="day-chip ${S.ui.activeDay===d.key?'active':''}" data-action="setday" data-day="${d.key}">${d.short}</button>`).join("")}
   </div>
@@ -2470,7 +2460,6 @@ function attachEvents() {
   document.querySelectorAll('[data-action="viewsession"]').forEach(el=>el.onclick=()=>{ S.ui.viewingSessionId=el.dataset.id; render(); });
   document.querySelectorAll('[data-action="closesession"]').forEach(el=>el.onclick=()=>{ S.ui.viewingSessionId=null; render(); });
   document.querySelectorAll('[data-action="atab"]').forEach(el=>el.onclick=()=>{ S.ui.aTab=el.dataset.tab; render(); });
-  document.querySelectorAll('[data-action="setweek"]').forEach(el=>el.onclick=()=>{ S.ui.week=Number(el.dataset.week); S.ui.activeDay=null; render(); });
   document.querySelectorAll('[data-action="setday"]').forEach(el=>el.onclick=()=>{ S.ui.activeDay=el.dataset.day; render(); });
 
   document.querySelectorAll('[data-action="editassign"]').forEach(el=>{
