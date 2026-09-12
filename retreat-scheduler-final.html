@@ -1374,7 +1374,7 @@ function AdminView() {
 }
 
 const ARRIVAL_DAY_1 = "2026-09-05";
-const ARRIVAL_DAY_2 = "2026-09-12";
+const DEPARTURE_DAY_2 = "2026-09-19";
 
 const TEAM_ARRIVALS = {
   "2026-09-04": [
@@ -1396,7 +1396,7 @@ const TEAM_ARRIVALS = {
 };
 
 function currentDays() {
-  return WEEK2_DAYS.filter(d=>d.weekday!=="Sat" || d.key===ARRIVAL_DAY_2);
+  return WEEK2_DAYS.filter(d=>d.weekday!=="Sat" || d.key===DEPARTURE_DAY_2);
 }
 
 function MasterSchedule() {
@@ -1446,7 +1446,7 @@ function Timetable(day) {
   if (day === INSTALLATION_DAY) return DayArrivalsView(day, { title:"Installation — team &amp; equipment set-up day", showSteps:false });
   if (day === ARRIVAL_DAY_1) return DayArrivalsView(day, { title:"Arrivals", showSteps:true });
 
-  const isArrivalDay = day === ARRIVAL_DAY_2;
+  const isArrivalDay = day === DEPARTURE_DAY_2;
   if (isArrivalDay) {
     return TimetableWithArrivals(day);
   }
@@ -1639,7 +1639,7 @@ function NoteModal() {
 
 function AddModal() {
   const { type, day, slot } = S.ui.addTarget;
-  const isArrivalDay2 = day === "2026-09-12";
+  const isArrivalDay2 = day === DEPARTURE_DAY_2;
   const week = RETREAT_DAYS[1].includes(day) ? 1 : 2;
   const eligible = S.participants.filter(p=>{
     const weekMatch = isArrivalDay2 ? true : (p.week === week);
